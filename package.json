@@ -1,14 +1,25 @@
 {
   "name": "discordus",
   "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "ncc build src/index.ts -o dist --target es2020",
+    "dev": "bun src/index.ts",
+    "lint": "eslint",
+    "deploy-commands": "bun src/commands/util/deployCommands.ts"
+  },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "eslint": "^9.39.2",
+    "eslint-plugin-unicorn": "^62.0.0",
+    "typescript-eslint": "^8.52.0"
   },
   "peerDependencies": {
     "typescript": "^5"
   },
   "dependencies": {
     "@jimp/types": "^1.6.0",
+    "discord.js": "^14.25.1",
     "gifwrap": "^0.10.1",
     "jimp": "^1.6.0"
   }

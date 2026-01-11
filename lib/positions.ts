@@ -68,3 +68,28 @@ export function getRandomPlacement(): Placement {
 
   return POSITIONS[randNumber] ?? "top-right";
 }
+
+export class RandomPlacement {
+  availablePlacements = [
+    "top-right",
+    "top-left",
+    "bottom-left",
+    "bottom-right",
+  ] as Placement[];
+
+  get() {
+    if (this.availablePlacements.length === 0) {
+      this.availablePlacements = [
+        "top-right",
+        "top-left",
+        "bottom-left",
+        "bottom-right",
+      ];
+    }
+    const randNumber = Math.floor(Math.random() * 5);
+    const deletedEl = this.availablePlacements[randNumber];
+    this.availablePlacements.splice(randNumber, 1);
+
+    return deletedEl ?? "top-left";
+  }
+}

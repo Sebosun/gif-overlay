@@ -4,16 +4,20 @@ import path from "path";
 import { overlayTwoGifs } from "../lib/overlayTwoGifs";
 import { overlayGif } from "../lib/overlayGifImage";
 import { Jimp } from "jimp";
-import { getRandomPlacement as getRandomPlacement } from "../lib/positions";
+import { RandomPlacement } from "../lib/positions";
 
-const ASSETS_DIR = "../assets/";
-const exampleLoc = "../example.jpg";
+const ASSETS_DIR = "assets";
 
-async function generateAtRandom() {
-  const ls = await fs.readdir(ASSETS_DIR);
-  let name = "example-";
+export async function combineRandomImages(
+  sourceImg: Buffer,
+): Promise<Buffer | null> {
+  const mainPath = path.resolve(".");
+  const dir = path.join(mainPath, ASSETS_DIR);
+  const ls = await fs.readdir(dir);
 
   const randomGifs = [] as string[];
+
+  const randomPlacements = new RandomPlacement();
 
   for (const folder of ls) {
     const folderPath = path.join(ASSETS_DIR, folder);
@@ -24,25 +28,27 @@ async function generateAtRandom() {
     const randomGif = gifs[randomEl];
     if (randomGif) {
       const gifPath = path.join(folderPath, randomGif);
-      name += randomGif.split(".")[0];
       randomGifs.push(gifPath);
     }
   }
 
-  const exampleJimp = await Jimp.read(exampleLoc);
+  const exampleJimp = await Jimp.read(sourceImg);
   const firstGifLoc = randomGifs.pop();
 
   if (!firstGifLoc) {
     console.error("Couldnt get the first gif...");
-    return;
+    return null;
   }
 
   const firstGif = await GifUtil.read(firstGifLoc);
-  const placement = getRandomPlacement();
+  const placement = randomPlacements.get();
   let gif = await overlayGif(exampleJimp, firstGif, placement);
 
+  console.log("First layer constructed");
+
   for (const el of randomGifs) {
-    const placement = getRandomPlacement();
+    console.log("Parsing random gifs");
+    const placement = randomPlacements.get();
     const gifElem = await GifUtil.read(el);
 
     gif = await overlayTwoGifs({
@@ -52,12 +58,7 @@ async function generateAtRandom() {
     });
   }
 
-  await fs.writeFile(`${name}.gif`, gif.buffer);
+  return gif.buffer;
 }
 
-// for (let i = 0; i < 1000; i++) {
-//   console.log(`Generating ${i + 1} examples out of ${1000} `);
-//   await generateAtRandom();
-// }
-
-await generateAtRandom();
+// await generateAtRandom();
