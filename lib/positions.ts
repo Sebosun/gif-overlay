@@ -8,6 +8,7 @@ export type Placement =
   | "top-right"
   | "bottom-left"
   | "bottom-right";
+
 export type Positions = {
   x: number;
   y: number;
@@ -53,4 +54,17 @@ export function getPositions(
     x: 0,
     y: 0,
   };
+}
+
+export function getRandomPlacement(): Placement {
+  const POSITIONS: Record<number, Placement> = {
+    1: "top-right",
+    2: "top-left",
+    3: "bottom-left",
+    4: "bottom-right",
+  };
+
+  const randNumber = Math.floor(Math.random() * 5);
+
+  return POSITIONS[randNumber] ?? "top-right";
 }

@@ -8,12 +8,17 @@ interface OverlayOpts {
   placement: Placement;
 }
 
+// TODO: Make sure the image doesn't cover too much of the image
+// Or be fine with it if it's transparent
+// For certain effects, it may be okay to fullsdcreen them, add option for that
 export async function overlayTwoGifs(options: OverlayOpts): Promise<Gif> {
   const { gifPrimary, gifSecondary, placement } = options;
   const codec = new GifCodec();
 
   const primarySize = gifPrimary.height * gifPrimary.width;
   const secondarySize = gifSecondary.height * gifSecondary.width;
+
+  // gifPrimary.usesTransparency -- if at least one frame contains one transparent pixel
 
   let biggerImage: Gif;
   let smallerImage: Gif;
@@ -69,9 +74,7 @@ export async function overlayTwoGifs(options: OverlayOpts): Promise<Gif> {
     }
   }
 
-  framesAcc.forEach((frame) => {
-    GifUtil.quantizeDekker(frame, 256); // quantize the image
-  });
+  GifUtil.quantizeDekker(framesAcc, 256); // quantize the image
 
   console.log("Constructing new gif");
   const newGif = await codec.encodeGif(framesAcc, { loops: 0 });
