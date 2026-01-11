@@ -4,6 +4,7 @@ import path from "path";
 import { overlayTwoGifs } from "../lib/overlayTwoGifs";
 import { overlayGif } from "../lib/overlayGifImage";
 import { Jimp } from "jimp";
+import { getRandomPlacement as getRandomPlacement } from "../lib/positions";
 
 const ASSETS_DIR = "../assets/";
 const exampleLoc = "../example.jpg";
@@ -37,22 +38,26 @@ async function generateAtRandom() {
   }
 
   const firstGif = await GifUtil.read(firstGifLoc);
-  let gif = await overlayGif(exampleJimp, firstGif);
+  const placement = getRandomPlacement();
+  let gif = await overlayGif(exampleJimp, firstGif, placement);
 
   for (const el of randomGifs) {
+    const placement = getRandomPlacement();
     const gifElem = await GifUtil.read(el);
 
     gif = await overlayTwoGifs({
       gifPrimary: gif,
       gifSecondary: gifElem,
-      placement: "bottom-right",
+      placement: placement,
     });
   }
 
   await fs.writeFile(`${name}.gif`, gif.buffer);
 }
 
-for (let i = 0; i < 1000; i++) {
-  console.log(`Generating ${i + 1} examples out of ${1000} `);
-  await generateAtRandom();
-}
+// for (let i = 0; i < 1000; i++) {
+//   console.log(`Generating ${i + 1} examples out of ${1000} `);
+//   await generateAtRandom();
+// }
+
+await generateAtRandom();

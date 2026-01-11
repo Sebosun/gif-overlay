@@ -1,8 +1,12 @@
 import fs from "fs/promises";
 import { splitImageToGif } from "../convert";
 import { fetch, sleep } from "bun";
-import type { DownloadImage, FetchResult, RunnerOpts } from "./RunnerTypes";
 import path from "path";
+import type {
+  DownloadImage,
+  FetchResult,
+  RunnerOpts,
+} from "../types/RunnerTypes";
 
 async function downloadImage(opts: DownloadImage, saveDir: string) {
   const { name, isGif, imageUrl, width, height } = opts;
@@ -82,10 +86,10 @@ const GOOD_TAGS = {
 } as const;
 
 const opts = {
-  saveDir: "../assets/anime/",
+  saveDir: "../assets/random/",
   start: 1,
   end: 10,
-  tag: GOOD_TAGS.kawaii,
+  tag: GOOD_TAGS.best_rated,
 };
 
 runRunner(opts);
