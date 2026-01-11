@@ -40,30 +40,3 @@ export async function splitImageToGif(
   const gif = await codec.encodeGif(gifFrames, { loops: 0 });
   return gif;
 }
-
-export async function overlayGif(
-  background: JimpRead,
-  gif: Gif,
-  x: number = 0,
-  y: number = 0,
-) {
-  const codec = new GifCodec();
-
-  const frames = gif.frames.map((frame) => {
-    const jimpFrame = new Jimp(frame.bitmap);
-    const composite = background.clone();
-    composite.composite(jimpFrame, x, y);
-
-    return new GifFrame(composite.bitmap, {
-      delayCentisecs: frame.delayCentisecs,
-    });
-  });
-
-  frames.forEach((frame) => {
-    console.log("Quantizing that dekker");
-    GifUtil.quantizeDekker(frame, 256); // quantize the image
-  });
-
-  const newGif = await codec.encodeGif(frames, { loops: 0 });
-  return newGif;
-}

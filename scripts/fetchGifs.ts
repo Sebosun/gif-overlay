@@ -82,7 +82,7 @@ const GOOD_TAGS = {
 } as const;
 
 const opts = {
-  saveDir: "./kawaii",
+  saveDir: "../assets/anime/",
   start: 1,
   end: 10,
   tag: GOOD_TAGS.kawaii,

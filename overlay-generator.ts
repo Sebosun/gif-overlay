@@ -1,8 +1,8 @@
 import fs from "fs/promises";
-import { overlayGif } from "./convert";
 import { GifUtil } from "gifwrap";
 import { Jimp } from "jimp";
 import path from "path";
+import { overlayGif } from "./lib/overlayGifImage";
 
 const exampleJimp = await Jimp.read("./example.jpg");
 const gifsPath = `./scripts/good-morning`;
