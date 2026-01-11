@@ -9,6 +9,13 @@ async function downloadImage(opts: DownloadImage, saveDir: string) {
 
   const result = await fetch(imageUrl);
 
+  const joinedPath = path.join(saveDir, `${name}.${isGif ? "gif" : "png"}`);
+
+  if (await fs.exists(joinedPath)) {
+    console.log("Image already exists, skipping...");
+    return;
+  }
+
   if (!result.body) {
     console.error("No resulting body, returning...");
     return;
@@ -20,10 +27,8 @@ async function downloadImage(opts: DownloadImage, saveDir: string) {
     const bodyArr = await Array.fromAsync(result.body);
     const buffer = Buffer.concat(bodyArr);
     const res = await splitImageToGif(buffer, width, height);
-    const joinedPath = path.join(saveDir, `${name}.gif`);
     await fs.writeFile(joinedPath, res.buffer);
   } else {
-    const joinedPath = path.join(saveDir, `${name}.png`);
     const bodyArr = await Array.fromAsync(result.body);
     await fs.writeFile(joinedPath, bodyArr);
   }
@@ -60,7 +65,7 @@ async function runRunner(opts: RunnerOpts) {
 
   for (let i = start; i < end; i++) {
     const iter = 18 * i;
-    const url = `https://www.picmix.com/maker/get-stamps?tag=${tag}&offset=${iter}`;
+    const url = `https://www.picmix.com/maker/get-stamps?tag=${tag}&offset=${iter}`; // shamelessly stealing cool gifs from picmix
     console.log("Generating url, with iteration ", i, " Total: ", iter);
 
     await fetchGifs(url, saveDir);
@@ -69,10 +74,18 @@ async function runRunner(opts: RunnerOpts) {
   }
 }
 
+const GOOD_TAGS = {
+  best_rated: "__all__",
+  morning: "good morning",
+  anime: "anime",
+  kawaii: "kawaii",
+} as const;
+
 const opts = {
-  saveDir: "./good-morning",
-  start: 2,
+  saveDir: "./kawaii",
+  start: 1,
   end: 10,
-  tag: "good morning",
+  tag: GOOD_TAGS.kawaii,
 };
+
 runRunner(opts);

@@ -1,8 +1,7 @@
-import { Jimp, type JimpInstance } from "jimp";
-import fs from "fs/promises";
+import { Jimp } from "jimp";
 import { GifFrame, GifCodec, Gif, GifUtil } from "gifwrap";
 
-type JimpRead = Awaited<ReturnType<typeof Jimp.read>>;
+export type JimpRead = Awaited<ReturnType<typeof Jimp.read>>;
 
 export async function splitImageToGif(
   imagePath: string | Buffer,
