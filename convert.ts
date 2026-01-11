@@ -1,7 +1,8 @@
 import { Jimp, type JimpInstance } from "jimp";
 import fs from "fs/promises";
 import { GifFrame, GifCodec, Gif, GifUtil } from "gifwrap";
-import { writeFile } from "fs";
+
+type JimpRead = Awaited<ReturnType<typeof Jimp.read>>;
 
 export async function splitImageToGif(
   imagePath: string | Buffer,
@@ -42,14 +43,12 @@ export async function splitImageToGif(
 }
 
 export async function overlayGif(
-  backgroundPath: string,
+  background: JimpRead,
   gif: Gif,
-  output: string,
   x: number = 0,
   y: number = 0,
 ) {
   const codec = new GifCodec();
-  const background = await Jimp.read(backgroundPath);
 
   const frames = gif.frames.map((frame) => {
     const jimpFrame = new Jimp(frame.bitmap);
@@ -67,5 +66,5 @@ export async function overlayGif(
   });
 
   const newGif = await codec.encodeGif(frames, { loops: 0 });
-  await fs.writeFile(output, newGif.buffer);
+  return newGif;
 }
