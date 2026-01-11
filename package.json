@@ -1,0 +1,15 @@
+{
+  "name": "discordus",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@jimp/types": "^1.6.0",
+    "gifwrap": "^0.10.1",
+    "jimp": "^1.6.0"
+  }
+}
