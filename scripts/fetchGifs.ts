@@ -9,16 +9,9 @@ import type {
 } from "../types/RunnerTypes";
 
 async function downloadImage(opts: DownloadImage, saveDir: string) {
-  const { name, isGif, imageUrl, width, height } = opts;
+  const { name, isGif, imageUrl, width, height, saveName } = opts;
 
   const result = await fetch(imageUrl);
-
-  const joinedPath = path.join(saveDir, `${name}.${isGif ? "gif" : "png"}`);
-
-  if (await fs.exists(joinedPath)) {
-    console.log("Image already exists, skipping...");
-    return;
-  }
 
   if (!result.body) {
     console.error("No resulting body, returning...");
@@ -31,10 +24,10 @@ async function downloadImage(opts: DownloadImage, saveDir: string) {
     const bodyArr = await Array.fromAsync(result.body);
     const buffer = Buffer.concat(bodyArr);
     const res = await splitImageToGif(buffer, width, height);
-    await fs.writeFile(joinedPath, res.buffer);
+    await fs.writeFile(saveName, res.buffer);
   } else {
     const bodyArr = await Array.fromAsync(result.body);
-    await fs.writeFile(joinedPath, bodyArr);
+    await fs.writeFile(saveName, bodyArr);
   }
 }
 
@@ -44,17 +37,25 @@ async function fetchGifs(url: string, saveDir: string) {
 
   for (const img of data.stamps) {
     console.log("Downloading image", img.id, "...");
+    const isGif = img.isAnimated || img.isGif;
+    const joinedPath = path.join(saveDir, `${img.id}.${isGif ? "gif" : "png"}`);
+
+    if (await fs.exists(joinedPath)) {
+      continue;
+    }
+
     await downloadImage(
       {
         name: img.id,
         isGif: img.isAnimated || img.isGif,
         imageUrl: img.srcNormal,
+        saveName: joinedPath,
         width: Number(img.width),
         height: Number(img.height),
       },
       saveDir,
     );
-    const sleepTime = Math.floor(Math.random() * 1000);
+    const sleepTime = Math.floor(Math.random() * 10000);
     await sleep(sleepTime);
   }
 }
@@ -79,7 +80,7 @@ async function runRunner(opts: RunnerOpts) {
 }
 
 const GOOD_TAGS = {
-  best_rated: "__all__",
+  best_rated: "_all_",
   morning: "good morning",
   anime: "anime",
   kawaii: "kawaii",
@@ -88,7 +89,7 @@ const GOOD_TAGS = {
 const opts = {
   saveDir: "../assets/random/",
   start: 1,
-  end: 10,
+  end: 20,
   tag: GOOD_TAGS.best_rated,
 };
 

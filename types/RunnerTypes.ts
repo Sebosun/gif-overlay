@@ -19,6 +19,7 @@ export interface Stamps {
 export interface DownloadImage {
   name: string;
   isGif: boolean;
+  saveName: string;
   imageUrl: string;
   width: number;
   height: number;
