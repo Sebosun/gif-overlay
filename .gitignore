@@ -35,8 +35,8 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 
 
 # Media files
-.png
-.gif
-.jpg
-.jpeg
-.mp4
+*.png
+*.gif
+*.jpg
+*.jpeg
+*.mp4
