@@ -1,7 +1,6 @@
 // Require the necessary discord.js classes
 import { Client, Events, GatewayIntentBits } from "discord.js";
 import commands from "./commands/commands";
-import { generateAtRandom } from "../scripts/generateAtRandom";
 import { combineRandomImages } from "../lib/combineRandomImages";
 
 const token = process.env.token;

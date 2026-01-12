@@ -21,9 +21,9 @@ async function generateOverlayedGif() {
   for (const el of ls) {
     if (el.endsWith("gif")) {
       const gif = await GifUtil.read(`${gifsPath}/${el}`);
-      const newName = `example-${i++}.gif`;
-      const res = await overlayGif(exampleJimp, gif);
-      const filePath = path.join(examplesPath, newName);
+      const name = `example-${i++}.gif`;
+      const res = await overlayGif(exampleJimp, gif, "top-left");
+      const filePath = path.join(examplesPath, name);
       await fs.writeFile(filePath, res.buffer);
     }
 

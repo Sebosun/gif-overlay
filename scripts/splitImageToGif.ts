@@ -1,8 +1,10 @@
 import { Jimp } from "jimp";
-import { GifFrame, GifCodec, Gif, GifUtil } from "gifwrap";
+import { GifFrame, GifCodec } from "gifwrap";
 
 export type JimpRead = Awaited<ReturnType<typeof Jimp.read>>;
 
+// Images come merged into multiple frames on one jpg.
+// This code is splitting it based on known frameWidth and frameHeight
 export async function splitImageToGif(
   imagePath: string | Buffer,
   frameWidth: number,

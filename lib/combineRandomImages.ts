@@ -2,16 +2,16 @@ import fs from "fs/promises";
 import { GifUtil } from "gifwrap";
 import path from "path";
 import { overlayTwoGifs } from "../lib/overlayTwoGifs";
-import { overlayGif } from "../lib/overlayGifImage";
+import { overlayGif, type JimpRead } from "../lib/overlayGifImage";
 import { Jimp } from "jimp";
 import { RandomPlacement } from "../lib/positions";
 
-const ASSETS_DIR = "assets";
+const ASSETS_DIR = "assets/";
 
 export async function combineRandomImages(
-  sourceImg: Buffer,
+  sourceImg: Buffer | JimpRead,
 ): Promise<Buffer | null> {
-  const mainPath = path.resolve(".");
+  const mainPath = path.resolve(`${__dirname}/../`);
   const dir = path.join(mainPath, ASSETS_DIR);
   const ls = await fs.readdir(dir);
 
@@ -20,7 +20,7 @@ export async function combineRandomImages(
   const randomPlacements = new RandomPlacement();
 
   for (const folder of ls) {
-    const folderPath = path.join(ASSETS_DIR, folder);
+    const folderPath = path.join(dir, folder);
     const items = await fs.readdir(folderPath);
     const gifs = items.filter((el) => el.endsWith(".gif"));
 
@@ -32,7 +32,13 @@ export async function combineRandomImages(
     }
   }
 
-  const exampleJimp = await Jimp.read(sourceImg);
+  let targetImg: JimpRead;
+  if (sourceImg instanceof Buffer) {
+    targetImg = await Jimp.read(sourceImg);
+  } else {
+    targetImg = sourceImg as JimpRead;
+  }
+
   const firstGifLoc = randomGifs.pop();
 
   if (!firstGifLoc) {
@@ -42,7 +48,7 @@ export async function combineRandomImages(
 
   const firstGif = await GifUtil.read(firstGifLoc);
   const placement = randomPlacements.get();
-  let gif = await overlayGif(exampleJimp, firstGif, placement);
+  let gif = await overlayGif(targetImg, firstGif, placement);
 
   console.log("First layer constructed");
 
@@ -60,5 +66,3 @@ export async function combineRandomImages(
 
   return gif.buffer;
 }
-
-// await generateAtRandom();

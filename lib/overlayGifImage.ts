@@ -26,6 +26,5 @@ export async function overlayGif(
 
   GifUtil.quantizeDekker(frames, 256); // quantize the image
 
-  const newGif = await codec.encodeGif(frames, { loops: 0 });
-  return newGif;
+  return await codec.encodeGif(frames, { loops: 0 });
 }

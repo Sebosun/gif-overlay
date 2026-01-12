@@ -1,5 +1,4 @@
 import fs from "fs/promises";
-import { splitImageToGif } from "../convert";
 import { fetch, sleep } from "bun";
 import path from "path";
 import type {
@@ -7,9 +6,10 @@ import type {
   FetchResult,
   RunnerOpts,
 } from "../types/RunnerTypes";
+import { splitImageToGif } from "./splitImageToGif";
 
-async function downloadImage(opts: DownloadImage, saveDir: string) {
-  const { name, isGif, imageUrl, width, height, saveName } = opts;
+async function downloadImage(opts: DownloadImage) {
+  const { isGif, imageUrl, width, height, saveName } = opts;
 
   const result = await fetch(imageUrl);
 
@@ -55,7 +55,7 @@ async function fetchGifs(url: string, saveDir: string) {
       },
       saveDir,
     );
-    const sleepTime = Math.floor(Math.random() * 10000);
+    const sleepTime = Math.floor(Math.random() * 10_000);
     await sleep(sleepTime);
   }
 }
@@ -74,7 +74,7 @@ async function runRunner(opts: RunnerOpts) {
     console.log("Generating url, with iteration ", i, " Total: ", iter);
 
     await fetchGifs(url, saveDir);
-    const sleepTime = Math.floor(Math.random() * 10000);
+    const sleepTime = Math.floor(Math.random() * 10_000);
     await sleep(sleepTime);
   }
 }

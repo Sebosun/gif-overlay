@@ -36,7 +36,7 @@ export async function overlayTwoGifs(options: OverlayOpts): Promise<Gif> {
       ? gifPrimary.frames.length
       : gifSecondary.frames.length;
 
-  let framesAcc = [] as GifFrame[];
+  const framesAcc = [] as GifFrame[];
 
   // looping over two gifs
   for (let i = 0; i < totalFrames; i++) {
@@ -77,7 +77,8 @@ export async function overlayTwoGifs(options: OverlayOpts): Promise<Gif> {
   GifUtil.quantizeDekker(framesAcc, 256); // quantize the image
 
   console.log("Constructing new gif");
-  const newGif = await codec.encodeGif(framesAcc, { loops: 0 });
 
-  return newGif;
+  const encodedGif = await codec.encodeGif(framesAcc, { loops: 0 });
+
+  return encodedGif;
 }
