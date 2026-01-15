@@ -5,12 +5,79 @@ import { getRatio } from "./ratio";
 import type { JimpRead } from "./overlayGifImage";
 
 interface CombinerOpts {
+  gifPrimary: Gif | JimpRead;
+  gifSecondary: Gif | JimpRead;
+  placement: Placement;
+}
+
+interface TwoImagesStategyOpts {
+  firstImage: JimpRead;
+  secondImage: JimpRead;
+  placement: Placement;
+}
+
+interface GifStrategy {
+  run(): Promise<JimpRead | Gif>;
+}
+
+export function jimpGuardType(gif: Gif | JimpRead): gif is JimpRead {
+  return (gif as Gif).frames === undefined;
+}
+
+export function createComposite(
+  frame1: JimpBitmap,
+  frame2: JimpBitmap,
+  placement: Placement,
+): JimpRead {
+  const scale = getRatio(frame1, frame2);
+  const jimpFrameAggregate = new Jimp(frame1).clone();
+  const jimpFrameElement = new Jimp(frame2).clone();
+
+  if (scale !== 1) {
+    jimpFrameElement.scale(scale);
+  }
+
+  const { x, y } = getPositions(
+    placement,
+    jimpFrameAggregate,
+    jimpFrameElement,
+  );
+
+  const composite = jimpFrameAggregate.composite(
+    jimpFrameElement,
+    x,
+    y,
+  ) as JimpRead;
+  return composite;
+}
+
+class TwoImagesStrategy implements GifStrategy {
+  firstImage: JimpRead;
+  secondImage: JimpRead;
+  placement: Placement;
+
+  constructor(options: TwoImagesStategyOpts) {
+    this.firstImage = options.firstImage;
+    this.secondImage = options.secondImage;
+    this.placement = options.placement;
+  }
+
+  async run() {
+    return createComposite(
+      this.firstImage.bitmap,
+      this.secondImage.bitmap,
+      this.placement,
+    );
+  }
+}
+
+interface MainStrategyOpts {
   gifPrimary: Gif;
   gifSecondary: Gif | JimpRead;
   placement: Placement;
 }
 
-export class GifCombiner {
+class GifCombinerMainStrategy implements GifStrategy {
   gifPrimary: Gif;
   gifSecondary: Gif | JimpRead;
   placement: Placement;
@@ -20,7 +87,7 @@ export class GifCombiner {
   aggregateImage!: Gif | JimpRead;
   elementImage!: Gif | JimpRead;
 
-  constructor(options: CombinerOpts) {
+  constructor(options: MainStrategyOpts) {
     this.gifPrimary = options.gifPrimary;
     this.gifSecondary = options.gifSecondary;
     this.placement = options.placement;
@@ -75,7 +142,6 @@ export class GifCombiner {
         console.log("No frame", this.aggregateImage.frames.length, i, idx);
       }
     } else {
-      console.log("Enters route that shouldnt happen");
       aggregateBitmap = this.aggregateImage.bitmap;
     }
 
@@ -94,7 +160,6 @@ export class GifCombiner {
         console.log("No frame", this.elementImage.frames.length, i, idx);
       }
     } else {
-      console.log("Enters route that shouldnt happen");
       elementBitmap = this.elementImage.bitmap;
     }
 
@@ -144,29 +209,58 @@ export class GifCombiner {
   }
 }
 
-export const createComposite = (
-  frame1: JimpBitmap,
-  frame2: JimpBitmap,
-  placement: Placement,
-): JimpRead => {
-  const scale = getRatio(frame1, frame2);
-  const jimpFrameAggregate = new Jimp(frame1).clone();
-  const jimpFrameElement = new Jimp(frame2).clone();
+export class GifCombiner {
+  gifPrimary: Gif | JimpRead;
+  gifSecondary: Gif | JimpRead;
+  placement: Placement;
 
-  if (scale !== 1) {
-    jimpFrameElement.scale(scale);
+  strategy!: GifStrategy;
+
+  totalFrames!: number;
+
+  aggregateImage!: Gif | JimpRead;
+  elementImage!: Gif | JimpRead;
+
+  constructor(options: CombinerOpts) {
+    this.gifPrimary = options.gifPrimary;
+    this.gifSecondary = options.gifSecondary;
+    this.placement = options.placement;
+    this.init();
   }
 
-  const { x, y } = getPositions(
-    placement,
-    jimpFrameAggregate,
-    jimpFrameElement,
-  );
+  init() {
+    if (
+      this.guardMyType(this.gifPrimary) &&
+      this.guardMyType(this.gifSecondary)
+    ) {
+      this.strategy = new TwoImagesStrategy({
+        firstImage: this.gifPrimary,
+        secondImage: this.gifSecondary,
+        placement: this.placement,
+      });
+      return;
+    }
 
-  const composite = jimpFrameAggregate.composite(
-    jimpFrameElement,
-    x,
-    y,
-  ) as JimpRead;
-  return composite;
-};
+    if (this.guardMyType(this.gifPrimary)) {
+      this.strategy = new GifCombinerMainStrategy({
+        gifPrimary: this.gifSecondary as Gif,
+        gifSecondary: this.gifPrimary,
+        placement: this.placement,
+      });
+    } else {
+      this.strategy = new GifCombinerMainStrategy({
+        gifPrimary: this.gifPrimary,
+        gifSecondary: this.gifSecondary,
+        placement: this.placement,
+      });
+    }
+  }
+
+  guardMyType(gif: Gif | JimpRead): gif is JimpRead {
+    return (gif as Gif).frames === undefined;
+  }
+
+  async run() {
+    return await this.strategy.run();
+  }
+}

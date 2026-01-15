@@ -1,8 +1,8 @@
 import fs from "fs/promises";
 import { GifUtil } from "gifwrap";
 import path from "path";
-import { GifCombiner } from "../lib/overlayTwoGifs";
-import { overlayGif, type JimpRead } from "../lib/overlayGifImage";
+import { GifCombiner, jimpGuardType } from "../lib/overlayTwoGifs";
+import { type JimpRead } from "../lib/overlayGifImage";
 import { Jimp } from "jimp";
 import { RandomPlacement } from "../lib/positions";
 
@@ -49,7 +49,13 @@ export async function combineRandomImages(
 
   const firstGif = await GifUtil.read(firstGifLoc);
   const placement = randomPlacements.get();
-  let gif = await overlayGif(targetImg, firstGif, placement);
+
+  const combiner = new GifCombiner({
+    gifPrimary: firstGif,
+    gifSecondary: targetImg,
+    placement: placement,
+  });
+  let gif = await combiner.run();
 
   console.log("First layer constructed");
 
@@ -68,6 +74,10 @@ export async function combineRandomImages(
 
     gif = await combiner.run();
     count++;
+  }
+
+  if (jimpGuardType(gif)) {
+    return await gif.getBuffer("image/jpeg");
   }
 
   return gif.buffer;
