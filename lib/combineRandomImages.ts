@@ -1,7 +1,7 @@
 import fs from "fs/promises";
 import { GifUtil } from "gifwrap";
 import path from "path";
-import { overlayTwoGifs } from "../lib/overlayTwoGifs";
+import { GifCombiner } from "../lib/overlayTwoGifs";
 import { overlayGif, type JimpRead } from "../lib/overlayGifImage";
 import { Jimp } from "jimp";
 import { RandomPlacement } from "../lib/positions";
@@ -19,6 +19,7 @@ export async function combineRandomImages(
 
   const randomPlacements = new RandomPlacement();
 
+  console.log("Getting random gifs");
   for (const folder of ls) {
     const folderPath = path.join(dir, folder);
     const items = await fs.readdir(folderPath);
@@ -52,16 +53,21 @@ export async function combineRandomImages(
 
   console.log("First layer constructed");
 
+  let count = 1;
   for (const el of randomGifs) {
-    console.log("Parsing random gifs");
+    console.log(`Constructing layer nr ${count}`);
+
     const placement = randomPlacements.get();
     const gifElem = await GifUtil.read(el);
 
-    gif = await overlayTwoGifs({
+    const combiner = new GifCombiner({
       gifPrimary: gif,
       gifSecondary: gifElem,
       placement: placement,
     });
+
+    gif = await combiner.run();
+    count++;
   }
 
   return gif.buffer;

@@ -1,84 +1,172 @@
-import { Jimp } from "jimp";
-import { GifFrame, GifCodec, Gif, GifUtil } from "gifwrap";
+import { Jimp, type Bitmap } from "jimp";
+import { GifFrame, GifCodec, Gif, GifUtil, type JimpBitmap } from "gifwrap";
 import { getPositions, type Placement } from "./positions";
+import { getRatio } from "./ratio";
+import type { JimpRead } from "./overlayGifImage";
 
-interface OverlayOpts {
+interface CombinerOpts {
   gifPrimary: Gif;
-  gifSecondary: Gif;
+  gifSecondary: Gif | JimpRead;
   placement: Placement;
 }
 
-// TODO: Make sure the image doesn't cover too much of the image
-// Or be fine with it if it's transparent
-// For certain effects, it may be okay to fullsdcreen them, add option for that
-export async function overlayTwoGifs(options: OverlayOpts): Promise<Gif> {
-  const { gifPrimary, gifSecondary, placement } = options;
-  const codec = new GifCodec();
+export class GifCombiner {
+  gifPrimary: Gif;
+  gifSecondary: Gif | JimpRead;
+  placement: Placement;
 
-  const primarySize = gifPrimary.height * gifPrimary.width;
-  const secondarySize = gifSecondary.height * gifSecondary.width;
+  totalFrames!: number;
 
-  // gifPrimary.usesTransparency -- if at least one frame contains one transparent pixel
+  aggregateImage!: Gif | JimpRead;
+  elementImage!: Gif | JimpRead;
 
-  let biggerImage: Gif;
-  let smallerImage: Gif;
+  constructor(options: CombinerOpts) {
+    this.gifPrimary = options.gifPrimary;
+    this.gifSecondary = options.gifSecondary;
+    this.placement = options.placement;
 
-  if (primarySize > secondarySize) {
-    biggerImage = gifPrimary;
-    smallerImage = gifSecondary;
-  } else {
-    biggerImage = gifSecondary;
-    smallerImage = gifPrimary;
+    this.init();
   }
 
-  const totalFrames =
-    gifPrimary.frames.length > gifSecondary.frames.length
-      ? gifPrimary.frames.length
-      : gifSecondary.frames.length;
-
-  const framesAcc = [] as GifFrame[];
-
-  // looping over two gifs
-  for (let i = 0; i < totalFrames; i++) {
-    let biggerFramesIdx = i;
-    let smallerFrameIdx = i;
-
-    if (i > biggerImage.frames.length) {
-      biggerFramesIdx = (i % biggerImage.frames.length) - 1; // modulo so it wraps, -1 cause its an array
-    }
-
-    if (i > smallerImage.frames.length) {
-      smallerFrameIdx = (i % smallerImage.frames.length) - 1; // modulo so it wraps, -1 cause its an array
-    }
-
-    const mainFrame = biggerImage.frames[biggerFramesIdx];
-    const childFrame = smallerImage.frames[smallerFrameIdx];
-
-    if (mainFrame && childFrame) {
-      const jimpFrameMain = new Jimp(mainFrame.bitmap).clone();
-      const jimpFrameSecondary = new Jimp(childFrame.bitmap).clone();
-
-      const { x, y } = getPositions(
-        placement,
-        jimpFrameMain,
-        jimpFrameSecondary,
-      );
-
-      const composite = jimpFrameMain.composite(jimpFrameSecondary, x, y);
-
-      framesAcc.push(
-        new GifFrame(composite.bitmap, {
-          delayCentisecs: mainFrame.delayCentisecs,
-        }),
-      );
-    }
+  guardMyType(gif: Gif | JimpRead): gif is JimpRead {
+    return (gif as Gif).frames === undefined;
   }
 
-  GifUtil.quantizeDekker(framesAcc, 256); // quantize the image
+  init() {
+    const primarySize = this.gifPrimary.height * this.gifPrimary.width;
+    const secondarySize = this.gifSecondary.height * this.gifSecondary.width;
 
-  console.log("Constructing new gif");
+    // gifPrimary.usesTransparency -- if at least one frame contains one transparent pixel
 
-  const encodedGif = await codec.encodeGif(framesAcc, { loops: 0 });
+    if (primarySize > secondarySize) {
+      this.aggregateImage = this.gifPrimary;
+      this.elementImage = this.gifSecondary;
+    } else {
+      this.aggregateImage = this.gifSecondary;
+      this.elementImage = this.gifPrimary;
+    }
 
-  return encodedGif;
+    if (this.guardMyType(this.gifSecondary)) {
+      this.totalFrames = this.gifPrimary.frames.length;
+      return;
+    }
+
+    this.totalFrames =
+      this.gifPrimary.frames.length > this.gifSecondary.frames.length
+        ? this.gifPrimary.frames.length
+        : this.gifSecondary.frames.length;
+  }
+
+  getIndividualFrame(i: number) {
+    let aggregateBitmap: Bitmap | undefined = undefined;
+    let elementBitmap: Bitmap | undefined = undefined;
+    let delay: undefined | number = undefined;
+
+    if (!this.guardMyType(this.aggregateImage)) {
+      let idx = i;
+      if (i >= this.aggregateImage.frames.length) {
+        idx = i % (this.aggregateImage.frames.length - 1); // modulo so it wraps, -1 cause its an array
+      }
+      const frame = this.aggregateImage.frames[idx];
+      if (frame) {
+        aggregateBitmap = frame.bitmap;
+        delay = frame.delayCentisecs;
+      } else {
+        console.log("No frame", this.aggregateImage.frames.length, i, idx);
+      }
+    } else {
+      console.log("Enters route that shouldnt happen");
+      aggregateBitmap = this.aggregateImage.bitmap;
+    }
+
+    if (!this.guardMyType(this.elementImage)) {
+      let idx = i;
+      if (i >= this.elementImage.frames.length) {
+        idx = i % (this.elementImage.frames.length - 1); // modulo so it wraps, -1 cause its an array
+      }
+      const frame = this.elementImage.frames[idx];
+      if (frame) {
+        elementBitmap = frame.bitmap;
+        if (!delay) {
+          delay = frame.delayCentisecs;
+        }
+      } else {
+        console.log("No frame", this.elementImage.frames.length, i, idx);
+      }
+    } else {
+      console.log("Enters route that shouldnt happen");
+      elementBitmap = this.elementImage.bitmap;
+    }
+
+    if (!aggregateBitmap || !elementBitmap) {
+      throw new Error("No frames were found...");
+    }
+
+    if (!delay) {
+      delay = 10;
+    }
+
+    return [aggregateBitmap, elementBitmap, delay] as const;
+  }
+
+  async loopAndCombine() {
+    const acc = [] as GifFrame[];
+
+    for (let i = 0; i < this.totalFrames; i++) {
+      const [aggregateBitmap, elementBitmap, delay] =
+        this.getIndividualFrame(i);
+
+      if (aggregateBitmap && elementBitmap) {
+        const composite = createComposite(
+          aggregateBitmap,
+          elementBitmap,
+          this.placement,
+        );
+        acc.push(
+          new GifFrame(composite.bitmap, {
+            delayCentisecs: delay,
+          }),
+        );
+      }
+    }
+
+    return acc;
+  }
+
+  async run(): Promise<Gif> {
+    const codec = new GifCodec();
+    const framesAcc = await this.loopAndCombine();
+
+    GifUtil.quantizeDekker(framesAcc, 256); // quantize the image
+
+    const encodedGif = await codec.encodeGif(framesAcc, { loops: 0 });
+    return encodedGif;
+  }
 }
+
+export const createComposite = (
+  frame1: JimpBitmap,
+  frame2: JimpBitmap,
+  placement: Placement,
+): JimpRead => {
+  const scale = getRatio(frame1, frame2);
+  const jimpFrameAggregate = new Jimp(frame1).clone();
+  const jimpFrameElement = new Jimp(frame2).clone();
+
+  if (scale !== 1) {
+    jimpFrameElement.scale(scale);
+  }
+
+  const { x, y } = getPositions(
+    placement,
+    jimpFrameAggregate,
+    jimpFrameElement,
+  );
+
+  const composite = jimpFrameAggregate.composite(
+    jimpFrameElement,
+    x,
+    y,
+  ) as JimpRead;
+  return composite;
+};
