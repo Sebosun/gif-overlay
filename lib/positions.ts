@@ -16,8 +16,8 @@ export type Positions = {
 
 export function getPositions(
   placement: Placement,
-  target: JimpSizes,
-  source: JimpSizes,
+  aggregate: JimpSizes,
+  element: JimpSizes,
 ): Positions {
   if (placement === "top-left") {
     return {
@@ -28,14 +28,14 @@ export function getPositions(
 
   if (placement === "top-right") {
     return {
-      x: target.width - source.width,
-      y: target.height - source.height,
+      x: aggregate.width - element.width,
+      y: 0,
     };
   }
 
   if (placement === "bottom-right") {
-    const x = target.width - source.width;
-    const y = target.height - source.height;
+    const x = aggregate.width - element.width;
+    const y = aggregate.height - element.height;
 
     return {
       x,
@@ -46,7 +46,7 @@ export function getPositions(
   if (placement === "bottom-left") {
     return {
       x: 0,
-      y: target.height - source.height,
+      y: aggregate.height - element.height,
     };
   }
 
