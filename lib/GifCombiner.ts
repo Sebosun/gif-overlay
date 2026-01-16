@@ -9,8 +9,8 @@ export interface GifStrategy {
 }
 
 export interface CombinerOpts {
-  gifPrimary: Gif | JimpRead;
-  gifSecondary: Gif | JimpRead;
+  base: Gif | JimpRead;
+  overlay: Gif | JimpRead;
   placement: Placement;
 }
 
@@ -19,8 +19,8 @@ export function jimpGuardType(gif: Gif | JimpRead): gif is JimpRead {
 }
 
 export class GifCombiner {
-  gifPrimary: Gif | JimpRead;
-  gifSecondary: Gif | JimpRead;
+  base: Gif | JimpRead;
+  overlay: Gif | JimpRead;
   placement: Placement;
 
   strategy!: GifStrategy;
@@ -31,38 +31,27 @@ export class GifCombiner {
   elementImage!: Gif | JimpRead;
 
   constructor(options: CombinerOpts) {
-    this.gifPrimary = options.gifPrimary;
-    this.gifSecondary = options.gifSecondary;
+    this.base = options.base;
+    this.overlay = options.overlay;
     this.placement = options.placement;
     this.init();
   }
 
   init() {
-    if (
-      this.guardMyType(this.gifPrimary) &&
-      this.guardMyType(this.gifSecondary)
-    ) {
+    if (this.guardMyType(this.base) && this.guardMyType(this.overlay)) {
       this.strategy = new GifCombinerTwoImagesStrategy({
-        firstImage: this.gifPrimary,
-        secondImage: this.gifSecondary,
+        firstImage: this.base,
+        secondImage: this.overlay,
         placement: this.placement,
       });
       return;
     }
 
-    if (this.guardMyType(this.gifPrimary)) {
-      this.strategy = new GifCombinerMainStrategy({
-        gifPrimary: this.gifSecondary as Gif,
-        gifSecondary: this.gifPrimary,
-        placement: this.placement,
-      });
-    } else {
-      this.strategy = new GifCombinerMainStrategy({
-        gifPrimary: this.gifPrimary,
-        gifSecondary: this.gifSecondary,
-        placement: this.placement,
-      });
-    }
+    this.strategy = new GifCombinerMainStrategy({
+      gifPrimary: this.base,
+      gifSecondary: this.overlay,
+      placement: this.placement,
+    });
   }
 
   guardMyType(gif: Gif | JimpRead): gif is JimpRead {

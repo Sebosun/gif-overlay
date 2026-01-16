@@ -1,11 +1,10 @@
 import fs from "fs/promises";
 import { GifUtil } from "gifwrap";
 import path from "path";
-import { GifCombiner } from "./GifCombinerMainStrategy";
 import { type JimpRead } from "../lib/overlayGifImage";
 import { Jimp } from "jimp";
 import { RandomPlacement } from "../lib/positions";
-import { jimpGuardType } from "./GifCombiner";
+import { GifCombiner, jimpGuardType } from "./GifCombiner";
 
 const ASSETS_DIR = "assets/";
 
@@ -52,10 +51,11 @@ export async function combineRandomImages(
   const placement = randomPlacements.get();
 
   const combiner = new GifCombiner({
-    gifPrimary: firstGif,
-    gifSecondary: targetImg,
+    base: targetImg,
+    overlay: firstGif,
     placement: placement,
   });
+
   let gif = await combiner.run();
 
   for (const el of randomGifs) {
@@ -63,8 +63,8 @@ export async function combineRandomImages(
     const gifElem = await GifUtil.read(el);
 
     const combiner = new GifCombiner({
-      gifPrimary: gif,
-      gifSecondary: gifElem,
+      base: gif,
+      overlay: gifElem,
       placement: placement,
     });
 

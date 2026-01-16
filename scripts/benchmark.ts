@@ -1,9 +1,8 @@
 import fs from "fs/promises";
 import { GifUtil } from "gifwrap";
 import path from "path";
-import { GifCombiner } from "../lib/GifCombinerMainStrategy";
 import { Jimp } from "jimp";
-import { jimpGuardType } from "../lib/GifCombiner";
+import { GifCombiner, jimpGuardType } from "../lib/GifCombiner";
 
 const ASSETS_DIR = "benchmark-assets/";
 const baseImage = "image.jpg";
@@ -24,24 +23,24 @@ export async function combineRandomImages(): Promise<Buffer | null> {
   const randomGif = await GifUtil.read(randomPath);
 
   const combiner = new GifCombiner({
-    gifPrimary: targetImg,
-    gifSecondary: goodMorningGif,
+    base: targetImg,
+    overlay: goodMorningGif,
     placement: "bottom-right",
   });
 
   let gif = await combiner.run();
 
   const combinerHeart = new GifCombiner({
-    gifPrimary: gif,
-    gifSecondary: heartGif,
+    base: gif,
+    overlay: heartGif,
     placement: "bottom-left",
   });
 
   gif = await combinerHeart.run();
 
   const combinerRandom = new GifCombiner({
-    gifPrimary: gif,
-    gifSecondary: randomGif,
+    base: gif,
+    overlay: randomGif,
     placement: "top-right",
   });
 

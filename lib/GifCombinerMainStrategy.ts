@@ -6,17 +6,13 @@ import sharp from "sharp";
 import { createCompositeJimp } from "./createComposite";
 import type { GifStrategy } from "./GifCombiner";
 
-interface CombinerOpts {
+interface MainStrategyOpts {
   gifPrimary: Gif | JimpRead;
   gifSecondary: Gif | JimpRead;
   placement: Placement;
 }
 
-interface MainStrategyOpts {
-  gifPrimary: Gif;
-  gifSecondary: Gif | JimpRead;
-  placement: Placement;
-}
+type Frames = [Bitmap, Bitmap, number];
 
 export class GifCombinerMainStrategy implements GifStrategy {
   useSharp: boolean = true;
@@ -37,34 +33,43 @@ export class GifCombinerMainStrategy implements GifStrategy {
     return (gif as Gif).frames === undefined;
   }
 
+  gifGuard(gif: Gif | JimpRead): gif is Gif {
+    return (gif as Gif).frames !== undefined;
+  }
+
   init(options: MainStrategyOpts) {
     const { gifPrimary, gifSecondary } = options;
 
-    const primarySize = gifPrimary.height * gifPrimary.width;
-    const secondarySize = gifSecondary.height * gifSecondary.width;
+    // const primarySize = gifPrimary.height * gifPrimary.width;
+    // const secondarySize = gifSecondary.height * gifSecondary.width;
 
-    // gifPrimary.usesTransparency -- if at least one frame contains one transparent pixel
+    this.aggregateImage = gifPrimary;
+    this.elementImage = gifSecondary;
 
-    if (primarySize > secondarySize) {
-      this.aggregateImage = gifPrimary;
-      this.elementImage = gifSecondary;
-    } else {
-      this.aggregateImage = gifSecondary;
-      this.elementImage = gifPrimary;
-    }
+    // if (primarySize > secondarySize) {
+    //   this.aggregateImage = gifPrimary;
+    //   this.elementImage = gifSecondary;
+    // } else {
+    //   this.aggregateImage = gifSecondary;
+    //   this.elementImage = gifPrimary;
+    // }
 
-    if (this.jimpReadGuard(gifSecondary)) {
-      this.totalFrames = gifPrimary.frames.length;
+    if (this.gifGuard(gifSecondary) && this.gifGuard(gifPrimary)) {
+      this.totalFrames =
+        gifPrimary.frames.length > gifSecondary.frames.length
+          ? gifPrimary.frames.length
+          : gifSecondary.frames.length;
+    } else if (this.gifGuard(gifSecondary) && !this.gifGuard(gifPrimary)) {
+      this.totalFrames = gifSecondary.frames.length;
       return;
+    } else if (this.gifGuard(gifPrimary) && !this.gifGuard(gifSecondary)) {
+      this.totalFrames = gifPrimary.frames.length;
+    } else {
+      throw new Error("Both inputs are an image, gifs not found.");
     }
-
-    this.totalFrames =
-      gifPrimary.frames.length > gifSecondary.frames.length
-        ? gifPrimary.frames.length
-        : gifSecondary.frames.length;
   }
 
-  getIndividualFrame(i: number) {
+  getIndividualFrame(i: number): Frames {
     let aggregateBitmap: Bitmap | undefined = undefined;
     let elementBitmap: Bitmap | undefined = undefined;
     let delay: undefined | number = undefined;
@@ -111,7 +116,7 @@ export class GifCombinerMainStrategy implements GifStrategy {
       delay = 10;
     }
 
-    return [aggregateBitmap, elementBitmap, delay] as const;
+    return [aggregateBitmap, elementBitmap, delay];
   }
 
   async generateSharpFrame(
@@ -149,35 +154,40 @@ export class GifCombinerMainStrategy implements GifStrategy {
   }
 
   async loopAndCombine() {
-    const acc = [] as GifFrame[];
-
     console.time(`${this.useSharp ? "Sharp" : "Sharpless"}`);
-    for (let i = 0; i < this.totalFrames; i++) {
-      const [aggregateBitmap, elementBitmap, delay] =
-        this.getIndividualFrame(i);
+    const frames: Frames[] = [];
 
-      if (this.useSharp) {
-        const bitmap = await this.generateSharpFrame(
-          aggregateBitmap,
-          elementBitmap,
-        );
-        acc.push(
-          new GifFrame(bitmap, {
-            delayCentisecs: delay,
-          }),
-        );
-      } else {
-        const bitmap = await this.generateJimpFrame(
-          aggregateBitmap,
-          elementBitmap,
-        );
-        acc.push(
-          new GifFrame(bitmap, {
-            delayCentisecs: delay,
-          }),
-        );
-      }
+    for (let i = 0; i < this.totalFrames; i++) {
+      frames.push(this.getIndividualFrame(i));
     }
+
+    const acc = await Promise.all(
+      frames.map(async (frame) => {
+        const [aggregateBitmap, elementBitmap, delay] = frame;
+        if (this.useSharp) {
+          console.time("Frame Generation");
+          const bitmap = await this.generateSharpFrame(
+            aggregateBitmap,
+            elementBitmap,
+          );
+          console.timeEnd("Frame Generation");
+          return new GifFrame(bitmap, {
+            delayCentisecs: delay,
+          });
+        } else {
+          console.time("Frame Generation");
+          const bitmap = await this.generateJimpFrame(
+            aggregateBitmap,
+            elementBitmap,
+          );
+          console.timeEnd("Frame Generation");
+          return new GifFrame(bitmap, {
+            delayCentisecs: delay,
+          });
+        }
+      }),
+    );
+
     console.timeEnd(`${this.useSharp ? "Sharp" : "Sharpless"}`);
 
     return acc;
@@ -187,70 +197,11 @@ export class GifCombinerMainStrategy implements GifStrategy {
     const codec = new GifCodec();
     const framesAcc = await this.loopAndCombine();
 
-    // console.time("Quantizing");
     if (!this.useSharp) {
       GifUtil.quantizeDekker(framesAcc, 256); // quantize the image
     }
-    // TODO: need to somehow improve this, its slow as fuuuck
-    // console.timeEnd("Quantizing");
 
     const encodedGif = await codec.encodeGif(framesAcc, { loops: 0 });
     return encodedGif;
-  }
-}
-
-export class GifCombiner {
-  gifPrimary: Gif | JimpRead;
-  gifSecondary: Gif | JimpRead;
-  placement: Placement;
-
-  strategy!: GifStrategy;
-
-  totalFrames!: number;
-
-  aggregateImage!: Gif | JimpRead;
-  elementImage!: Gif | JimpRead;
-
-  constructor(options: CombinerOpts) {
-    this.gifPrimary = options.gifPrimary;
-    this.gifSecondary = options.gifSecondary;
-    this.placement = options.placement;
-    this.init();
-  }
-
-  init() {
-    if (
-      this.guardMyType(this.gifPrimary) &&
-      this.guardMyType(this.gifSecondary)
-    ) {
-      this.strategy = new TwoImagesStrategy({
-        firstImage: this.gifPrimary,
-        secondImage: this.gifSecondary,
-        placement: this.placement,
-      });
-      return;
-    }
-
-    if (this.guardMyType(this.gifPrimary)) {
-      this.strategy = new GifCombinerMainStrategy({
-        gifPrimary: this.gifSecondary as Gif,
-        gifSecondary: this.gifPrimary,
-        placement: this.placement,
-      });
-    } else {
-      this.strategy = new GifCombinerMainStrategy({
-        gifPrimary: this.gifPrimary,
-        gifSecondary: this.gifSecondary,
-        placement: this.placement,
-      });
-    }
-  }
-
-  guardMyType(gif: Gif | JimpRead): gif is JimpRead {
-    return (gif as Gif).frames === undefined;
-  }
-
-  async run() {
-    return await this.strategy.run();
   }
 }
