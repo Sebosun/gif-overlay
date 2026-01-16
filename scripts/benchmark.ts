@@ -1,10 +1,9 @@
 import fs from "fs/promises";
 import { GifUtil } from "gifwrap";
 import path from "path";
-import { GifCombiner, jimpGuardType } from "../lib/overlayTwoGifs";
-import { type JimpRead } from "../lib/overlayGifImage";
+import { GifCombiner } from "../lib/GifCombinerMainStrategy";
 import { Jimp } from "jimp";
-import { RandomPlacement } from "../lib/positions";
+import { jimpGuardType } from "../lib/GifCombiner";
 
 const ASSETS_DIR = "benchmark-assets/";
 const baseImage = "image.jpg";
@@ -55,10 +54,12 @@ export async function combineRandomImages(): Promise<Buffer | null> {
   return gif.buffer;
 }
 
+console.time("Benchmark");
 const result = await combineRandomImages();
 if (!result) {
   throw new Error("Error parsing");
 }
+console.timeEnd("Benchmark");
 
 const savePath = path.join(ASSETS_DIR, `result.gif`);
 await fs.writeFile(savePath, result);

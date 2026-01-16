@@ -1,74 +1,15 @@
 import { Jimp, type Bitmap } from "jimp";
-import { GifFrame, GifCodec, Gif, GifUtil, type JimpBitmap } from "gifwrap";
-import { getPositions, type Placement } from "./positions";
-import { getRatio } from "./ratio";
+import { GifFrame, GifCodec, Gif, GifUtil } from "gifwrap";
+import { type Placement } from "./positions";
 import type { JimpRead } from "./overlayGifImage";
+import sharp from "sharp";
+import { createCompositeJimp } from "./createComposite";
+import type { GifStrategy } from "./GifCombiner";
 
 interface CombinerOpts {
   gifPrimary: Gif | JimpRead;
   gifSecondary: Gif | JimpRead;
   placement: Placement;
-}
-
-interface TwoImagesStategyOpts {
-  firstImage: JimpRead;
-  secondImage: JimpRead;
-  placement: Placement;
-}
-
-interface GifStrategy {
-  run(): Promise<JimpRead | Gif>;
-}
-
-export function jimpGuardType(gif: Gif | JimpRead): gif is JimpRead {
-  return (gif as Gif).frames === undefined;
-}
-
-export function createComposite(
-  frame1: JimpBitmap,
-  frame2: JimpBitmap,
-  placement: Placement,
-): JimpRead {
-  const scale = getRatio(frame1, frame2);
-  const jimpFrameAggregate = new Jimp(frame1).clone();
-  const jimpFrameElement = new Jimp(frame2).clone();
-
-  if (scale !== 1) {
-    jimpFrameElement.scale(scale);
-  }
-
-  const { x, y } = getPositions(
-    placement,
-    jimpFrameAggregate,
-    jimpFrameElement,
-  );
-
-  const composite = jimpFrameAggregate.composite(
-    jimpFrameElement,
-    x,
-    y,
-  ) as JimpRead;
-  return composite;
-}
-
-class TwoImagesStrategy implements GifStrategy {
-  firstImage: JimpRead;
-  secondImage: JimpRead;
-  placement: Placement;
-
-  constructor(options: TwoImagesStategyOpts) {
-    this.firstImage = options.firstImage;
-    this.secondImage = options.secondImage;
-    this.placement = options.placement;
-  }
-
-  async run() {
-    return createComposite(
-      this.firstImage.bitmap,
-      this.secondImage.bitmap,
-      this.placement,
-    );
-  }
 }
 
 interface MainStrategyOpts {
@@ -77,7 +18,9 @@ interface MainStrategyOpts {
   placement: Placement;
 }
 
-class GifCombinerMainStrategy implements GifStrategy {
+export class GifCombinerMainStrategy implements GifStrategy {
+  useSharp: boolean = true;
+
   placement: Placement;
 
   totalFrames!: number;
@@ -171,26 +114,71 @@ class GifCombinerMainStrategy implements GifStrategy {
     return [aggregateBitmap, elementBitmap, delay] as const;
   }
 
+  async generateSharpFrame(
+    aggregateBitmap: Bitmap,
+    elementBitmap: Bitmap,
+  ): Promise<Bitmap> {
+    const composite = createCompositeJimp(
+      aggregateBitmap,
+      elementBitmap,
+      this.placement,
+    );
+    const buffer = await composite.getBuffer("image/jpeg");
+
+    const processed = await sharp(buffer)
+      .png({
+        colors: 256,
+        dither: 1,
+      })
+      .toBuffer();
+
+    const jimpImage = await Jimp.read(processed);
+    return jimpImage.bitmap;
+  }
+
+  async generateJimpFrame(
+    aggregateBitmap: Bitmap,
+    elementBitmap: Bitmap,
+  ): Promise<Bitmap> {
+    const composite = createCompositeJimp(
+      aggregateBitmap,
+      elementBitmap,
+      this.placement,
+    );
+    return composite.bitmap;
+  }
+
   async loopAndCombine() {
     const acc = [] as GifFrame[];
 
+    console.time(`${this.useSharp ? "Sharp" : "Sharpless"}`);
     for (let i = 0; i < this.totalFrames; i++) {
       const [aggregateBitmap, elementBitmap, delay] =
         this.getIndividualFrame(i);
 
-      if (aggregateBitmap && elementBitmap) {
-        const composite = createComposite(
+      if (this.useSharp) {
+        const bitmap = await this.generateSharpFrame(
           aggregateBitmap,
           elementBitmap,
-          this.placement,
         );
         acc.push(
-          new GifFrame(composite.bitmap, {
+          new GifFrame(bitmap, {
+            delayCentisecs: delay,
+          }),
+        );
+      } else {
+        const bitmap = await this.generateJimpFrame(
+          aggregateBitmap,
+          elementBitmap,
+        );
+        acc.push(
+          new GifFrame(bitmap, {
             delayCentisecs: delay,
           }),
         );
       }
     }
+    console.timeEnd(`${this.useSharp ? "Sharp" : "Sharpless"}`);
 
     return acc;
   }
@@ -199,10 +187,12 @@ class GifCombinerMainStrategy implements GifStrategy {
     const codec = new GifCodec();
     const framesAcc = await this.loopAndCombine();
 
-    console.time("Quantizing");
-    GifUtil.quantizeDekker(framesAcc, 256); // quantize the image
+    // console.time("Quantizing");
+    if (!this.useSharp) {
+      GifUtil.quantizeDekker(framesAcc, 256); // quantize the image
+    }
     // TODO: need to somehow improve this, its slow as fuuuck
-    console.timeEnd("Quantizing");
+    // console.timeEnd("Quantizing");
 
     const encodedGif = await codec.encodeGif(framesAcc, { loops: 0 });
     return encodedGif;
@@ -225,7 +215,6 @@ export class GifCombiner {
     this.gifPrimary = options.gifPrimary;
     this.gifSecondary = options.gifSecondary;
     this.placement = options.placement;
-    console.log(options.placement);
     this.init();
   }
 
