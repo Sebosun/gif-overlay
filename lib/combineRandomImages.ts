@@ -48,6 +48,8 @@ export async function combineRandomImages(
   }
 
   const firstGif = await GifUtil.read(firstGifLoc);
+  console.log("Target", targetImg.width, targetImg.height, firstGifLoc);
+  console.log("Gif", firstGif.width, firstGif.height);
   const placement = randomPlacements.get();
 
   const combiner = new GifCombiner({
@@ -61,10 +63,13 @@ export async function combineRandomImages(
 
   let count = 1;
   for (const el of randomGifs) {
-    console.log(`Constructing layer nr ${count}`);
+    console.log(`Constructing layer nr ${count} ${el}`);
 
     const placement = randomPlacements.get();
     const gifElem = await GifUtil.read(el);
+
+    console.log("Gif target ", gif.width, gif.height);
+    console.log("Gif secondary", gifElem.width, gifElem.height);
 
     const combiner = new GifCombiner({
       gifPrimary: gif,

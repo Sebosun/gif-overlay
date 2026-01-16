@@ -86,7 +86,9 @@ export class RandomPlacement {
         "bottom-right",
       ];
     }
-    const randNumber = Math.floor(Math.random() * 5);
+    const randNumber = Math.floor(
+      Math.random() * this.availablePlacements.length,
+    );
     const deletedEl = this.availablePlacements[randNumber];
     this.availablePlacements.splice(randNumber, 1);
 

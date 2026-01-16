@@ -21,6 +21,8 @@ client.once(Events.ClientReady, (readyClient) => {
 });
 
 client.on(Events.MessageCreate, async (msg) => {
+  console.log("Message created");
+
   if (client.user?.id === msg.author.id) {
     console.log("Same id", client.user.id, msg.author.id);
     return;
