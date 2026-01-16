@@ -5,11 +5,15 @@ import { type JimpRead } from "../lib/overlayGifImage";
 import { Jimp } from "jimp";
 import { RandomPlacement } from "../lib/positions";
 import { GifCombiner, jimpGuardType } from "./GifCombiner";
+import { getRatio } from "./ratio";
 
 const ASSETS_DIR = "assets/";
+const BASE_MAX_RES = { height: 800, width: 800 };
+const maxResTotal = BASE_MAX_RES.height * BASE_MAX_RES.width;
 
 export async function combineRandomImages(
   sourceImg: Buffer | JimpRead,
+  scaleInitImage?: boolean,
 ): Promise<Buffer | null> {
   const mainPath = path.resolve(`${__dirname}/../`);
   const dir = path.join(mainPath, ASSETS_DIR);
@@ -35,7 +39,14 @@ export async function combineRandomImages(
 
   let targetImg: JimpRead;
   if (sourceImg instanceof Buffer) {
-    targetImg = await Jimp.read(sourceImg);
+    const read = await Jimp.read(sourceImg);
+    const isBiggerThanNecessary = read.width * read.height > maxResTotal;
+    if (scaleInitImage && isBiggerThanNecessary) {
+      const res = getRatio(BASE_MAX_RES, read);
+      read.scale(res);
+    }
+
+    targetImg = read;
   } else {
     targetImg = sourceImg as JimpRead;
   }

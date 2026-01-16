@@ -4,16 +4,16 @@ interface RatioDuck {
 }
 
 export const getRatio = (
-  biggerElement: RatioDuck,
-  smallerElement: RatioDuck,
+  baseElem: RatioDuck,
+  overlayElem: RatioDuck,
 ): number => {
   const DESIRED_MAX_RATIO = 0.25;
 
-  const biggerSize = biggerElement.height * biggerElement.width;
-  const smallerSize = smallerElement.height * smallerElement.width;
+  const base = baseElem.height * baseElem.width;
+  const overlay = overlayElem.height * overlayElem.width;
 
-  const desiredSize = biggerSize * DESIRED_MAX_RATIO;
-  const ratio = desiredSize / smallerSize;
+  const desiredSize = base * DESIRED_MAX_RATIO;
+  const ratio = desiredSize / overlay;
   const linearRatio = Math.sqrt(ratio);
 
   //   console.log(`

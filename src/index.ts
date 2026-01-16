@@ -1,5 +1,5 @@
 // Require the necessary discord.js classes
-import { Client, Events, GatewayIntentBits } from "discord.js";
+import { ChannelType, Client, Events, GatewayIntentBits } from "discord.js";
 import commands from "./commands/commands";
 import { combineRandomImages } from "../lib/combineRandomImages";
 
@@ -20,20 +20,31 @@ client.once(Events.ClientReady, (readyClient) => {
   console.log(`Ready! Logged in as ${readyClient.user.tag}`);
 });
 
-client.on(Events.MessageCreate, async (msg) => {
+client.on(Events.MessageCreate, async (message) => {
   console.log("Message created");
 
-  if (client.user?.id === msg.author.id) {
-    console.log("Same id", client.user.id, msg.author.id);
+  if (client.user?.id === message.author.id) {
+    console.log("Same id", client.user.id, message.author.id);
     return;
   }
 
-  if (msg.content === ".boomer") {
+  if (message.content === ".boomer") {
     console.log("Boomer command detected");
     try {
-      const firstImg = msg.attachments.at(0);
+      let firstImg = message.attachments.at(0);
       if (!firstImg) {
-        console.log("Couldnt get first img, returning...");
+        const options = { limit: 100 };
+        const fetched = await message.channel.messages.fetch(options);
+        for (const [, channelMsg] of fetched) {
+          if (channelMsg.attachments.at(0)) {
+            firstImg = channelMsg.attachments.at(0);
+            break;
+          }
+        }
+      }
+
+      if (!firstImg) {
+        console.log("No messages found");
         return;
       }
 
@@ -41,10 +52,10 @@ client.on(Events.MessageCreate, async (msg) => {
 
       const response = await fetch(url);
       const buffer = Buffer.from(await response.arrayBuffer());
-      const result = await combineRandomImages(buffer);
+      const result = await combineRandomImages(buffer, true);
       if (!result) return;
 
-      msg.channel.send({
+      message.channel.send({
         files: [{ attachment: result, name: "boomer.gif" }],
       });
     } catch (e) {
