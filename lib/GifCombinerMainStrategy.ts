@@ -80,6 +80,7 @@ export class GifCombinerMainStrategy implements GifStrategy {
     } else {
       throw new Error("Both inputs are an image, gifs not found.");
     }
+
   }
 
   getIndividualFrame(i: number): Frames {

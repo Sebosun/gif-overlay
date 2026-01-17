@@ -21,14 +21,17 @@ client.once(Events.ClientReady, (readyClient) => {
 });
 
 client.on(Events.MessageCreate, async (message) => {
-  console.log("Message created");
 
   if (client.user?.id === message.author.id) {
     console.log("Same id", client.user.id, message.author.id);
     return;
   }
 
-  if (message.content === ".boomer") {
+  const isBoomerify = message.content.startsWith('.boomer') || message.content.startsWith(".bomer")
+  const isPomusz = message.content === '.pomusz'
+
+  if (isBoomerify) {
+    const isRandom = message.content === ".boomerr" || message.content === '.bomerr'
     console.log("Boomer command detected");
     try {
       let firstImg = message.attachments.at(0);
@@ -52,16 +55,25 @@ client.on(Events.MessageCreate, async (message) => {
 
       const response = await fetch(url);
       const buffer = Buffer.from(await response.arrayBuffer());
-      const result = await combineRandomImages(buffer, true);
+      const result = await combineRandomImages(buffer, true, isRandom);
       if (!result) return;
 
-      message.channel.send({
+      await message.channel.send({
         files: [{ attachment: result, name: "boomer.gif" }],
       });
     } catch (e) {
+      await message.reply("This aint if chef, I'm too weak for this one.")
       console.error("Something went wrong...", e);
     }
+  } else if (isPomusz) {
+    message.reply(`
+\`\`\`
+.boomer - boomerify an image
+.boomerr - boomerify an image, random placements
+\`\`\`
+    `)
   }
+
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {

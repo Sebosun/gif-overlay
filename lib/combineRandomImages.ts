@@ -13,7 +13,8 @@ const maxResTotal = BASE_MAX_RES.height * BASE_MAX_RES.width;
 
 export async function combineRandomImages(
   sourceImg: Buffer | JimpRead,
-  scaleInitImage?: boolean,
+  scaleInitImage: boolean,
+  isRandom: boolean,
 ): Promise<Buffer | null> {
   const mainPath = path.resolve(`${__dirname}/../`);
   const dir = path.join(mainPath, ASSETS_DIR);
@@ -24,6 +25,7 @@ export async function combineRandomImages(
   const randomPlacements = new RandomPlacement();
 
   console.log("Getting random gifs");
+  // TODO: refactor so it doesnt fs.readfiles everytime this function launches
   for (const folder of ls) {
     const folderPath = path.join(dir, folder);
     const items = await fs.readdir(folderPath);
@@ -65,7 +67,7 @@ export async function combineRandomImages(
     base: targetImg,
     overlay: firstGif,
     placement: placement,
-    randomizePositions: true
+    randomizePositions: isRandom
   });
 
   let gif = await combiner.run();
@@ -78,7 +80,7 @@ export async function combineRandomImages(
       base: gif,
       overlay: gifElem,
       placement: placement,
-      randomizePositions: true
+      randomizePositions: isRandom
     });
 
     gif = await combiner.run();

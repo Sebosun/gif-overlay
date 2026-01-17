@@ -19,8 +19,6 @@ async function downloadImage(opts: DownloadImage) {
   }
 
   if (isGif) {
-    console.log("Sending an image to conver");
-    console.log("Array form async exists", Boolean(Array.fromAsync));
     const bodyArr = await Array.fromAsync(result.body);
     const buffer = Buffer.concat(bodyArr);
     const res = await splitImageToGif(buffer, width, height);
@@ -77,7 +75,7 @@ async function runRunner(opts: RunnerOpts) {
     console.log("Generating url, with iteration ", i, " Total: ", iter);
 
     await fetchGifs(url, saveDir);
-    const sleepTime = Math.floor(Math.random() * 10_000);
+    const sleepTime = Math.floor(Math.random() * 1000);
     await sleep(sleepTime);
   }
 }
@@ -90,10 +88,10 @@ const GOOD_TAGS = {
 } as const;
 
 const opts = {
-  saveDir: "./assets/good-morning/",
-  start: 1,
+  saveDir: "./assets/kawaii/",
+  start: 10,
   end: 50,
-  tag: GOOD_TAGS.morning,
+  tag: GOOD_TAGS.kawaii,
 };
 
 runRunner(opts);

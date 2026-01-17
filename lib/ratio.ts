@@ -15,7 +15,7 @@ export const getRatio = (options: RatioOptions): number => {
   let maxRatio = 0.25;
 
   if (penalize) {
-    maxRatio = 0.15;
+    maxRatio = 0.1;
   }
 
   const base = baseElem.height * baseElem.width;

@@ -60,25 +60,32 @@ function randomNumberInterval(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1) + min);
 }
 
-export function getPositionsRandomized(options: PositionOptions): Positions {
+export function getPositionsRandomized(
+  options: PositionOptions,
+  overflowPercent: number = 0.3 // Allow 30% overflow by default
+): Positions {
   const { base, overlay, placement } = options;
 
   const middleX = base.width / 2;
   const middleY = base.height / 2;
 
+  // Calculate how much the overlay can overflow into adjacent quadrants
+  const overflowX = overlay.width * overflowPercent;
+  const overflowY = overlay.height * overflowPercent;
+
   if (placement === "top-left") {
-    const randomTopRightX = randomNumberInterval(0, middleX);
-    const randomTopRightY = randomNumberInterval(0, middleY);
+    const randomTopLeftX = randomNumberInterval(0, middleX + overflowX);
+    const randomTopLeftY = randomNumberInterval(0, middleY + overflowY);
 
     return {
-      x: randomTopRightX,
-      y: randomTopRightY,
+      x: randomTopLeftX,
+      y: randomTopLeftY,
     };
   }
 
   if (placement === "top-right") {
-    const randomTopRightX = randomNumberInterval(middleX, base.width - overlay.width);
-    const randomTopRightY = randomNumberInterval(0, middleY);
+    const randomTopRightX = randomNumberInterval(middleX - overlay.width - overflowX, base.width - overlay.width);
+    const randomTopRightY = randomNumberInterval(0, middleY + overflowY);
     return {
       x: randomTopRightX,
       y: randomTopRightY,
@@ -86,18 +93,18 @@ export function getPositionsRandomized(options: PositionOptions): Positions {
   }
 
   if (placement === "bottom-right") {
-    const randomBottomRightX = randomNumberInterval(middleX, base.width - overlay.width);
-    const randomBottomLeftY = randomNumberInterval(middleY, base.height - overlay.height);
+    const randomBottomRightX = randomNumberInterval(middleX - overlay.width - overflowX, base.width - overlay.width);
+    const randomBottomRightY = randomNumberInterval(middleY - overlay.height - overflowY, base.height - overlay.height);
 
     return {
       x: randomBottomRightX,
-      y: randomBottomLeftY,
+      y: randomBottomRightY,
     };
   }
 
   if (placement === "bottom-left") {
-    const randomBottomLeftX = randomNumberInterval(0, middleX);
-    const randomBottomLeftY = randomNumberInterval(base.height - overlay.height, 0);
+    const randomBottomLeftX = randomNumberInterval(0, middleX + overflowX);
+    const randomBottomLeftY = randomNumberInterval(middleY - overlay.height - overflowY, base.height - overlay.height);
 
     return {
       x: randomBottomLeftX,
@@ -106,7 +113,7 @@ export function getPositionsRandomized(options: PositionOptions): Positions {
   }
 
   return {
-    x: randomNumberInterval(0, base.width),
-    y: randomNumberInterval(0, base.height),
+    x: randomNumberInterval(0, base.width - overlay.width),
+    y: randomNumberInterval(0, base.height - overlay.height),
   };
 }

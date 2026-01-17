@@ -25,7 +25,7 @@ if (!exists) {
 
 const image = await Jimp.read(targetPath);
 
-const res = await combineRandomImages(image);
+const res = await combineRandomImages(image, false, false);
 if (!res) {
   console.error("Failed to generate image");
   exit(1);
