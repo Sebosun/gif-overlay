@@ -3,16 +3,25 @@ interface RatioDuck {
   width: number;
 }
 
-export const getRatio = (
-  baseElem: RatioDuck,
-  overlayElem: RatioDuck,
-): number => {
-  const DESIRED_MAX_RATIO = 0.25;
+interface RatioOptions {
+  baseElem: RatioDuck;
+  overlayElem: RatioDuck;
+  penalize?: boolean;
+}
+
+export const getRatio = (options: RatioOptions): number => {
+  const { baseElem, overlayElem, penalize } = options;
+
+  let maxRatio = 0.25;
+
+  if (penalize) {
+    maxRatio = 0.15;
+  }
 
   const base = baseElem.height * baseElem.width;
   const overlay = overlayElem.height * overlayElem.width;
 
-  const desiredSize = base * DESIRED_MAX_RATIO;
+  const desiredSize = base * maxRatio;
   const ratio = desiredSize / overlay;
   const linearRatio = Math.sqrt(ratio);
 

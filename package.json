@@ -8,6 +8,7 @@
     "lint": "eslint",
     "deploy-commands": "bun src/commands/util/deployCommands.ts",
     "cli": "bun src/cli.ts",
+    "typecheck": "tsc --noEmit",
     "benchmark": "bun scripts/benchmark.ts"
   },
   "devDependencies": {

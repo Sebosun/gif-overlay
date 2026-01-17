@@ -26,6 +26,7 @@ export async function combineRandomImages(): Promise<Buffer | null> {
     base: targetImg,
     overlay: goodMorningGif,
     placement: "bottom-right",
+    randomizePositions: false
   });
 
   let gif = await combiner.run();
@@ -34,6 +35,7 @@ export async function combineRandomImages(): Promise<Buffer | null> {
     base: gif,
     overlay: heartGif,
     placement: "bottom-left",
+    randomizePositions: false
   });
 
   gif = await combinerHeart.run();
@@ -42,6 +44,7 @@ export async function combineRandomImages(): Promise<Buffer | null> {
     base: gif,
     overlay: randomGif,
     placement: "top-right",
+    randomizePositions: false
   });
 
   gif = await combinerRandom.run();

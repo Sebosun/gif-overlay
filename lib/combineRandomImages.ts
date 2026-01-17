@@ -3,9 +3,9 @@ import { GifUtil } from "gifwrap";
 import path from "path";
 import { type JimpRead } from "../lib/overlayGifImage";
 import { Jimp } from "jimp";
-import { RandomPlacement } from "../lib/positions";
 import { GifCombiner, jimpGuardType } from "./GifCombiner";
 import { getRatio } from "./ratio";
+import { RandomPlacement } from "./placement";
 
 const ASSETS_DIR = "assets/";
 const BASE_MAX_RES = { height: 800, width: 800 };
@@ -42,7 +42,7 @@ export async function combineRandomImages(
     const read = await Jimp.read(sourceImg);
     const isBiggerThanNecessary = read.width * read.height > maxResTotal;
     if (scaleInitImage && isBiggerThanNecessary) {
-      const res = getRatio(BASE_MAX_RES, read);
+      const res = getRatio({ baseElem: BASE_MAX_RES, overlayElem: read });
       read.scale(res);
     }
 
@@ -65,6 +65,7 @@ export async function combineRandomImages(
     base: targetImg,
     overlay: firstGif,
     placement: placement,
+    randomizePositions: true
   });
 
   let gif = await combiner.run();
@@ -77,6 +78,7 @@ export async function combineRandomImages(
       base: gif,
       overlay: gifElem,
       placement: placement,
+      randomizePositions: true
     });
 
     gif = await combiner.run();

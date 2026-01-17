@@ -41,20 +41,23 @@ async function fetchGifs(url: string, saveDir: string) {
     const joinedPath = path.join(saveDir, `${img.id}.${isGif ? "gif" : "png"}`);
 
     if (await fs.exists(joinedPath)) {
+      console.log("Image already downloaded");
       continue;
     }
 
-    await downloadImage(
-      {
-        name: img.id,
-        isGif: img.isAnimated || img.isGif,
-        imageUrl: img.srcNormal,
-        saveName: joinedPath,
-        width: Number(img.width),
-        height: Number(img.height),
-      },
-      saveDir,
-    );
+    if (!isGif) {
+      console.log("Not a gif, skipping");
+      continue;
+    }
+
+    await downloadImage({
+      name: img.id,
+      isGif: isGif,
+      imageUrl: img.srcNormal,
+      saveName: joinedPath,
+      width: Number(img.width),
+      height: Number(img.height),
+    });
     const sleepTime = Math.floor(Math.random() * 10_000);
     await sleep(sleepTime);
   }
@@ -87,10 +90,10 @@ const GOOD_TAGS = {
 } as const;
 
 const opts = {
-  saveDir: "../assets/random/",
+  saveDir: "./assets/good-morning/",
   start: 1,
-  end: 20,
-  tag: GOOD_TAGS.best_rated,
+  end: 50,
+  tag: GOOD_TAGS.morning,
 };
 
 runRunner(opts);

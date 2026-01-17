@@ -1,24 +1,24 @@
-interface JimpSizes {
+import type { Placement } from "./placement";
+
+interface Sizes {
   width: number;
   height: number;
 }
-
-export type Placement =
-  | "top-left"
-  | "top-right"
-  | "bottom-left"
-  | "bottom-right";
 
 export type Positions = {
   x: number;
   y: number;
 };
 
-export function getPositions(
-  placement: Placement,
-  aggregate: JimpSizes,
-  element: JimpSizes,
-): Positions {
+interface PositionOptions {
+  placement: Placement;
+  base: Sizes;
+  overlay: Sizes;
+}
+
+export function getPositionsPredictable(options: PositionOptions): Positions {
+  const { placement, base, overlay } = options;
+
   if (placement === "top-left") {
     return {
       x: 0,
@@ -28,14 +28,14 @@ export function getPositions(
 
   if (placement === "top-right") {
     return {
-      x: aggregate.width - element.width,
+      x: base.width - overlay.width,
       y: 0,
     };
   }
 
   if (placement === "bottom-right") {
-    const x = aggregate.width - element.width;
-    const y = aggregate.height - element.height;
+    const x = base.width - overlay.width;
+    const y = base.height - overlay.height;
 
     return {
       x,
@@ -46,7 +46,7 @@ export function getPositions(
   if (placement === "bottom-left") {
     return {
       x: 0,
-      y: aggregate.height - element.height,
+      y: base.height - overlay.height,
     };
   }
 
@@ -56,42 +56,57 @@ export function getPositions(
   };
 }
 
-export function getRandomPlacement(): Placement {
-  const POSITIONS: Record<number, Placement> = {
-    1: "top-right",
-    2: "top-left",
-    3: "bottom-left",
-    4: "bottom-right",
-  };
-
-  const randNumber = Math.floor(Math.random() * 5);
-
-  return POSITIONS[randNumber] ?? "top-right";
+function randomNumberInterval(min: number, max: number): number {
+  return Math.floor(Math.random() * (max - min + 1) + min);
 }
 
-export class RandomPlacement {
-  availablePlacements = [
-    "top-right",
-    "top-left",
-    "bottom-left",
-    "bottom-right",
-  ] as Placement[];
+export function getPositionsRandomized(options: PositionOptions): Positions {
+  const { base, overlay, placement } = options;
 
-  get() {
-    if (this.availablePlacements.length === 0) {
-      this.availablePlacements = [
-        "top-right",
-        "top-left",
-        "bottom-left",
-        "bottom-right",
-      ];
-    }
-    const randNumber = Math.floor(
-      Math.random() * this.availablePlacements.length,
-    );
-    const deletedEl = this.availablePlacements[randNumber];
-    this.availablePlacements.splice(randNumber, 1);
+  const middleX = base.width / 2;
+  const middleY = base.height / 2;
 
-    return deletedEl ?? "top-left";
+  if (placement === "top-left") {
+    const randomTopRightX = randomNumberInterval(0, middleX);
+    const randomTopRightY = randomNumberInterval(0, middleY);
+
+    return {
+      x: randomTopRightX,
+      y: randomTopRightY,
+    };
   }
+
+  if (placement === "top-right") {
+    const randomTopRightX = randomNumberInterval(middleX, base.width - overlay.width);
+    const randomTopRightY = randomNumberInterval(0, middleY);
+    return {
+      x: randomTopRightX,
+      y: randomTopRightY,
+    };
+  }
+
+  if (placement === "bottom-right") {
+    const randomBottomRightX = randomNumberInterval(middleX, base.width - overlay.width);
+    const randomBottomLeftY = randomNumberInterval(middleY, base.height - overlay.height);
+
+    return {
+      x: randomBottomRightX,
+      y: randomBottomLeftY,
+    };
+  }
+
+  if (placement === "bottom-left") {
+    const randomBottomLeftX = randomNumberInterval(0, middleX);
+    const randomBottomLeftY = randomNumberInterval(base.height - overlay.height, 0);
+
+    return {
+      x: randomBottomLeftX,
+      y: randomBottomLeftY,
+    };
+  }
+
+  return {
+    x: randomNumberInterval(0, base.width),
+    y: randomNumberInterval(0, base.height),
+  };
 }

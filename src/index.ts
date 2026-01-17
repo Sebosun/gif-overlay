@@ -1,5 +1,5 @@
 // Require the necessary discord.js classes
-import { ChannelType, Client, Events, GatewayIntentBits } from "discord.js";
+import { Client, Events, GatewayIntentBits } from "discord.js";
 import commands from "./commands/commands";
 import { combineRandomImages } from "../lib/combineRandomImages";
 

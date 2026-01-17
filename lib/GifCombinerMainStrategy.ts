@@ -1,15 +1,18 @@
 import { Jimp, type Bitmap } from "jimp";
 import { GifFrame, GifCodec, Gif, GifUtil } from "gifwrap";
-import { type Placement } from "./positions";
+import { getPositionsPredictable, getPositionsRandomized, type Positions } from "./positions";
 import type { JimpRead } from "./overlayGifImage";
 import sharp from "sharp";
 import { createCompositeJimp } from "./createComposite";
 import type { GifStrategy } from "./GifCombiner";
+import { getRatio } from "./ratio";
+import type { Placement } from "./placement";
 
 interface MainStrategyOpts {
   gifPrimary: Gif | JimpRead;
   gifSecondary: Gif | JimpRead;
   placement: Placement;
+  randomizePositions: boolean
 }
 
 type Frames = [Bitmap, Bitmap, number];
@@ -21,8 +24,12 @@ export class GifCombinerMainStrategy implements GifStrategy {
 
   totalFrames!: number;
 
-  aggregateImage!: Gif | JimpRead;
-  elementImage!: Gif | JimpRead;
+  baseImage!: Gif | JimpRead;
+  overlayImage!: Gif | JimpRead;
+
+  isBaseTransparent: boolean = false;
+  isOverlayTransparent: boolean = false;
+  randomizePositions: boolean = false
 
   constructor(options: MainStrategyOpts) {
     this.placement = options.placement;
@@ -43,8 +50,9 @@ export class GifCombinerMainStrategy implements GifStrategy {
     // const primarySize = gifPrimary.height * gifPrimary.width;
     // const secondarySize = gifSecondary.height * gifSecondary.width;
 
-    this.aggregateImage = gifPrimary;
-    this.elementImage = gifSecondary;
+    this.baseImage = gifPrimary;
+    this.overlayImage = gifSecondary;
+    this.randomizePositions = options.randomizePositions
 
     // if (primarySize > secondarySize) {
     //   this.aggregateImage = gifPrimary;
@@ -55,14 +63,19 @@ export class GifCombinerMainStrategy implements GifStrategy {
     // }
 
     if (this.gifGuard(gifSecondary) && this.gifGuard(gifPrimary)) {
+      this.isBaseTransparent = gifPrimary.usesTransparency;
+      this.isOverlayTransparent = gifSecondary.usesTransparency;
+
       this.totalFrames =
         gifPrimary.frames.length > gifSecondary.frames.length
           ? gifPrimary.frames.length
           : gifSecondary.frames.length;
     } else if (this.gifGuard(gifSecondary) && !this.gifGuard(gifPrimary)) {
+      this.isOverlayTransparent = gifSecondary.usesTransparency;
       this.totalFrames = gifSecondary.frames.length;
       return;
     } else if (this.gifGuard(gifPrimary) && !this.gifGuard(gifSecondary)) {
+      this.isBaseTransparent = gifPrimary.usesTransparency;
       this.totalFrames = gifPrimary.frames.length;
     } else {
       throw new Error("Both inputs are an image, gifs not found.");
@@ -70,45 +83,45 @@ export class GifCombinerMainStrategy implements GifStrategy {
   }
 
   getIndividualFrame(i: number): Frames {
-    let aggregateBitmap: Bitmap | undefined = undefined;
-    let elementBitmap: Bitmap | undefined = undefined;
+    let baseBitmap: Bitmap | undefined = undefined;
+    let overlayBitmap: Bitmap | undefined = undefined;
     let delay: undefined | number = undefined;
 
-    if (!this.jimpReadGuard(this.aggregateImage)) {
+    if (!this.jimpReadGuard(this.baseImage)) {
       let idx = i;
-      if (i >= this.aggregateImage.frames.length) {
-        idx = i % (this.aggregateImage.frames.length - 1); // modulo so it wraps, -1 cause its an array
+      if (i >= this.baseImage.frames.length) {
+        idx = i % (this.baseImage.frames.length - 1); // modulo so it wraps, -1 cause its an array
       }
-      const frame = this.aggregateImage.frames[idx];
+      const frame = this.baseImage.frames[idx];
       if (frame) {
-        aggregateBitmap = frame.bitmap;
+        baseBitmap = frame.bitmap;
         delay = frame.delayCentisecs;
       } else {
-        console.log("No frame", this.aggregateImage.frames.length, i, idx);
+        console.log("No frame", this.baseImage.frames.length, i, idx);
       }
     } else {
-      aggregateBitmap = this.aggregateImage.bitmap;
+      baseBitmap = this.baseImage.bitmap;
     }
 
-    if (!this.jimpReadGuard(this.elementImage)) {
+    if (!this.jimpReadGuard(this.overlayImage)) {
       let idx = i;
-      if (i >= this.elementImage.frames.length) {
-        idx = i % (this.elementImage.frames.length - 1); // modulo so it wraps, -1 cause its an array
+      if (i >= this.overlayImage.frames.length) {
+        idx = i % (this.overlayImage.frames.length - 1); // modulo so it wraps, -1 cause its an array
       }
-      const frame = this.elementImage.frames[idx];
+      const frame = this.overlayImage.frames[idx];
       if (frame) {
-        elementBitmap = frame.bitmap;
+        overlayBitmap = frame.bitmap;
         if (!delay) {
           delay = frame.delayCentisecs;
         }
       } else {
-        console.log("No frame", this.elementImage.frames.length, i, idx);
+        console.log("No frame", this.overlayImage.frames.length, i, idx);
       }
     } else {
-      elementBitmap = this.elementImage.bitmap;
+      overlayBitmap = this.overlayImage.bitmap;
     }
 
-    if (!aggregateBitmap || !elementBitmap) {
+    if (!baseBitmap || !overlayBitmap) {
       throw new Error("No frames were found...");
     }
 
@@ -116,18 +129,16 @@ export class GifCombinerMainStrategy implements GifStrategy {
       delay = 10;
     }
 
-    return [aggregateBitmap, elementBitmap, delay];
+    return [baseBitmap, overlayBitmap, delay];
   }
 
-  async generateSharpFrame(
-    aggregateBitmap: Bitmap,
-    elementBitmap: Bitmap,
-  ): Promise<Bitmap> {
-    const composite = createCompositeJimp(
-      aggregateBitmap,
-      elementBitmap,
-      this.placement,
-    );
+  async generateSharpFrame(baseBitmap: Bitmap, overlayBitmap: Bitmap, positions: Positions, scale: number): Promise<Bitmap> {
+    const composite = createCompositeJimp({
+      frame1: baseBitmap,
+      frame2: overlayBitmap,
+      positions: positions,
+      scale: scale
+    });
     const buffer = await composite.getBuffer("image/jpeg");
 
     const processed = await sharp(buffer)
@@ -141,15 +152,13 @@ export class GifCombinerMainStrategy implements GifStrategy {
     return jimpImage.bitmap;
   }
 
-  async generateJimpFrame(
-    aggregateBitmap: Bitmap,
-    elementBitmap: Bitmap,
-  ): Promise<Bitmap> {
-    const composite = createCompositeJimp(
-      aggregateBitmap,
-      elementBitmap,
-      this.placement,
-    );
+  async generateJimpFrame(baseBitmap: Bitmap, overlayBitmap: Bitmap, positions: Positions, scale: number): Promise<Bitmap> {
+    const composite = createCompositeJimp({
+      frame1: baseBitmap,
+      frame2: overlayBitmap,
+      positions: positions,
+      scale: scale
+    });
     return composite.bitmap;
   }
 
@@ -160,30 +169,51 @@ export class GifCombinerMainStrategy implements GifStrategy {
     for (let i = 0; i < this.totalFrames; i++) {
       frames.push(this.getIndividualFrame(i));
     }
+    const scale = getRatio({
+      baseElem: this.baseImage,
+      overlayElem: this.overlayImage,
+      penalize: !this.isOverlayTransparent,
+    });
+
+    // dimensions after scaling will be done
+    const overlayDimensions = {
+      width: Math.floor(this.overlayImage.width * scale),
+      height: Math.floor(this.overlayImage.height * scale)
+    }
+
+    let positions: Positions
+    if (this.randomizePositions) {
+      positions = getPositionsRandomized({
+        base: this.baseImage,
+        overlay: overlayDimensions,
+        placement: this.placement,
+      });
+
+    } else {
+      positions = getPositionsPredictable({
+        base: this.baseImage,
+        overlay: overlayDimensions,
+        placement: this.placement,
+      });
+    }
+
 
     const acc = await Promise.all(
       frames.map(async (frame) => {
-        const [aggregateBitmap, elementBitmap, delay] = frame;
+        const [baseBitmap, overlayBitmap, delay] = frame;
         if (this.useSharp) {
-          console.time("Frame Generation");
-          const bitmap = await this.generateSharpFrame(
-            aggregateBitmap,
-            elementBitmap,
-          );
+          console.time("Frame Generation")
+          const bitmap = await this.generateSharpFrame(baseBitmap, overlayBitmap, positions, scale);
           console.timeEnd("Frame Generation");
-          return new GifFrame(bitmap, {
-            delayCentisecs: delay,
-          });
+
+          return new GifFrame(bitmap, { delayCentisecs: delay });
         } else {
           console.time("Frame Generation");
-          const bitmap = await this.generateJimpFrame(
-            aggregateBitmap,
-            elementBitmap,
-          );
+
+          const bitmap = await this.generateJimpFrame(baseBitmap, overlayBitmap, positions, scale);
+
           console.timeEnd("Frame Generation");
-          return new GifFrame(bitmap, {
-            delayCentisecs: delay,
-          });
+          return new GifFrame(bitmap, { delayCentisecs: delay });
         }
       }),
     );

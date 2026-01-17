@@ -1,21 +1,26 @@
 import { Jimp } from "jimp";
 import { GifFrame, GifCodec, Gif, GifUtil } from "gifwrap";
-import { getPositions, type Placement } from "./positions";
+import { getPositionsPredictable } from "./positions";
+import type { Placement } from "./placement";
 
 export type JimpRead = Awaited<ReturnType<typeof Jimp.read>>;
 
 export async function overlayGif(
-  background: JimpRead,
-  gif: Gif,
+  base: JimpRead,
+  overlay: Gif,
   placement: Placement,
 ) {
   const codec = new GifCodec();
 
-  const frames = gif.frames.map((frame) => {
+  const frames = overlay.frames.map((frame) => {
     const frameJimp = new Jimp(frame.bitmap);
-    const composite = background.clone();
+    const composite = base.clone();
 
-    const { x, y } = getPositions(placement, background, frameJimp);
+    const { x, y } = getPositionsPredictable({
+      placement: placement,
+      base: base,
+      overlay: overlay,
+    });
 
     composite.composite(frameJimp, x, y);
 
