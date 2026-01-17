@@ -32,7 +32,6 @@ export class GifCombiner {
   aggregateImage!: Gif | JimpRead;
   elementImage!: Gif | JimpRead;
 
-
   constructor(options: CombinerOpts) {
     this.base = options.base;
     this.overlay = options.overlay;

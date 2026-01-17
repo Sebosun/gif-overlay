@@ -6,6 +6,7 @@ import { Jimp } from "jimp";
 import { GifCombiner, jimpGuardType } from "./GifCombiner";
 import { getRatio } from "./ratio";
 import { RandomPlacement } from "./placement";
+import sharp from "sharp";
 
 const ASSETS_DIR = "assets/";
 const BASE_MAX_RES = { height: 800, width: 800 };
@@ -41,7 +42,16 @@ export async function combineRandomImages(
 
   let targetImg: JimpRead;
   if (sourceImg instanceof Buffer) {
-    const read = await Jimp.read(sourceImg);
+    // jimp had some issues with reading some png files, so using sharp for that now and slowly realizing that jimp aint it chef
+
+    const process = await sharp(sourceImg)
+      .png({
+        colors: 256,
+        dither: 1,
+      })
+      .toBuffer();
+
+    const read = await Jimp.read(process);
     const isBiggerThanNecessary = read.width * read.height > maxResTotal;
     if (scaleInitImage && isBiggerThanNecessary) {
       const res = getRatio({ baseElem: BASE_MAX_RES, overlayElem: read });
