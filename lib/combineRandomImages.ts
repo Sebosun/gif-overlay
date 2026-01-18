@@ -1,12 +1,12 @@
 import fs from "fs/promises";
 import { GifUtil } from "gifwrap";
 import path from "path";
-import { type JimpRead } from "../lib/overlayGifImage";
 import { Jimp } from "jimp";
 import { GifCombiner, jimpGuardType } from "./GifCombiner";
 import { getRatio } from "./ratio";
 import { RandomPlacement } from "./placement";
 import sharp from "sharp";
+import type { JimpRead } from "../types/Jimp";
 
 const ASSETS_DIR = "assets/";
 const BASE_MAX_RES = { height: 800, width: 800 };

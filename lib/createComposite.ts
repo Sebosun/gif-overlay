@@ -1,7 +1,7 @@
 import { type JimpBitmap } from "gifwrap";
 import { type Positions } from "./positions";
-import type { JimpRead } from "./overlayGifImage";
 import { Jimp } from "jimp";
+import type { JimpRead } from "../types/Jimp";
 
 interface CompositeOpts {
   frame1: JimpBitmap;

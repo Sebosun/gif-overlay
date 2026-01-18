@@ -1,7 +1,14 @@
 import { type Client, type Message, type OmitPartialGroupDMChannel } from "discord.js";
-import { combineRandomImages } from "../../lib/combineRandomImages";
-import { getUrl } from "../util/getUrl";
+import { boomerify } from "./boomerify";
+import { pomusz } from "./pomusz";
 
+type ManualCommand = (message: OmitPartialGroupDMChannel<Message<boolean>>, client?: Client<boolean>) => Promise<void>
+type Commands = "boomerify" | "pomusz"
+
+const manualCommands: Record<Commands, ManualCommand> = {
+  boomerify: boomerify,
+  pomusz: pomusz
+}
 
 export async function rawCommandsManager(message: OmitPartialGroupDMChannel<Message<boolean>>, client: Client<boolean>): Promise<void> {
   if (client.user?.id === message.author.id) {
@@ -13,34 +20,9 @@ export async function rawCommandsManager(message: OmitPartialGroupDMChannel<Mess
   const isPomusz = message.content === '.pomusz'
 
   if (isBoomerify) {
-    const isRandom = message.content === ".boomerr" || message.content === '.bomerr'
-    message.channel.sendTyping()
-    try {
-      const url = await getUrl(message)
-
-      if (!url) {
-        console.log("Couldnt find url")
-        return
-      }
-
-      const response = await fetch(url);
-      const buffer = Buffer.from(await response.arrayBuffer());
-      const result = await combineRandomImages(buffer, true, isRandom);
-      if (!result) return;
-
-      await message.channel.send({
-        files: [{ attachment: result, name: "boomer.gif" }],
-      });
-    } catch (e) {
-      await message.reply("This aint if chef, I'm too weak for this one.")
-      console.error("Something went wrong...", e);
-    }
+    manualCommands.boomerify(message)
   } else if (isPomusz) {
-    message.reply(`
-\`\`\`
-.boomer - boomerify an image
-.boomerr - boomerify an image, random placements
-\`\`\`
-    `)
+    manualCommands.pomusz(message)
   }
+
 }

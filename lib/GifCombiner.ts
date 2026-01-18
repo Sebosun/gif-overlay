@@ -1,8 +1,8 @@
 import type { Gif } from "gifwrap";
-import type { JimpRead } from "./overlayGifImage";
 import { GifCombinerTwoImagesStrategy } from "./GifCombinerTwoImagesStrategy";
 import { GifCombinerMainStrategy } from "./GifCombinerMainStrategy";
 import type { Placement } from "./placement";
+import type { JimpRead } from "../types/Jimp";
 
 export interface GifStrategy {
   run(): Promise<JimpRead | Gif>;

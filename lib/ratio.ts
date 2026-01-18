@@ -25,12 +25,5 @@ export const getRatio = (options: RatioOptions): number => {
   const ratio = desiredSize / overlay;
   const linearRatio = Math.sqrt(ratio);
 
-  //   console.log(`
-  // bigger: ${biggerSize}
-  // smallerSize: ${smallerSize}
-  // desiredSize: ${desiredSize}
-  // ratio: ${ratio}
-  // result: ${ratio * smallerSize}`);
-
   return linearRatio;
 };

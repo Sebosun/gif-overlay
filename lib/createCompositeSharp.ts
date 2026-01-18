@@ -1,10 +1,10 @@
 import type { JimpBitmap } from "gifwrap";
 import { Jimp } from "jimp";
 import type { Placement } from "./placement";
-import type { JimpRead } from "./overlayGifImage";
 import { getRatio } from "./ratio";
 import sharp from "sharp";
 import { getPositionsPredictable } from "./positions";
+import type { JimpRead } from "../types/Jimp";
 
 async function ensureRGBA(bitmap: JimpBitmap) {
   const jimp = new Jimp(bitmap);

@@ -1,6 +1,6 @@
+import type { JimpRead } from "../types/Jimp";
 import { createCompositeJimp } from "./createComposite";
 import type { GifStrategy } from "./GifCombiner";
-import type { JimpRead } from "./overlayGifImage";
 import type { Placement } from "./placement";
 import { getPositionsPredictable, getPositionsRandomized, type Positions } from "./positions";
 import { getRatio } from "./ratio";
