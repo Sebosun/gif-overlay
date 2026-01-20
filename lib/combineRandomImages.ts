@@ -1,5 +1,5 @@
 import fs from "fs/promises";
-import { GifUtil } from "gifwrap";
+import { Gif, GifUtil } from "gifwrap";
 import path from "path";
 import { Jimp } from "jimp";
 import { GifCombiner, jimpGuardType } from "./GifCombiner";
@@ -13,7 +13,7 @@ const BASE_MAX_RES = { height: 800, width: 800 };
 const maxResTotal = BASE_MAX_RES.height * BASE_MAX_RES.width;
 
 export async function combineRandomImages(
-  sourceImg: Buffer | JimpRead,
+  sourceImg: Buffer | JimpRead | Gif,
   scaleInitImage: boolean,
   isRandom: boolean,
 ): Promise<Buffer | null> {
@@ -40,7 +40,7 @@ export async function combineRandomImages(
     }
   }
 
-  let targetImg: JimpRead;
+  let targetImg: JimpRead | Gif;
   if (sourceImg instanceof Buffer) {
     // jimp had some issues with reading some png files, so using sharp for that now and slowly realizing that jimp aint it chef
 
@@ -60,7 +60,7 @@ export async function combineRandomImages(
 
     targetImg = read;
   } else {
-    targetImg = sourceImg as JimpRead;
+    targetImg = sourceImg as JimpRead | Gif;
   }
 
   const firstGifLoc = randomGifs.pop();

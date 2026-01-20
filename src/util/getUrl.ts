@@ -1,4 +1,4 @@
-import { ComponentType, type Message } from "discord.js"
+import { ComponentType, Embed, type Message } from "discord.js"
 
 export function getUrlFromComponent(message: Message<boolean>): string {
   let url = ""
@@ -18,15 +18,30 @@ export function getUrlFromComponent(message: Message<boolean>): string {
   return url
 }
 
+export function getUrlFromEmbed(embeds: Embed[]): string {
+  let url = ""
+
+  for (const el of embeds) {
+    if (el.video && el.video.proxyURL) {
+      url = el.video.proxyURL
+    } else if (el.thumbnail?.proxyURL) {
+      url = el.thumbnail.proxyURL
+    }
+  }
+
+  return url
+}
+
 export async function getUrl(message: Message<boolean>): Promise<string> {
   let url = message.attachments.at(0)?.url ?? ""
   if (!url) {
-    const options = { limit: 100 };
+    const options = { limit: 50 };
     const fetched = await message.channel.messages.fetch(options);
     for (const [, channelMsg] of fetched) {
-      const attach = channelMsg.attachments.at(0)
+      const attach = channelMsg.attachments.first()?.proxyURL
+      const embedUrl = getUrlFromEmbed(channelMsg.embeds)
       if (attach) {
-        url = attach.url
+        url = attach
         break;
       } else if (channelMsg.components.length > 0) {
         const resultUrl = getUrlFromComponent(channelMsg)
@@ -34,6 +49,9 @@ export async function getUrl(message: Message<boolean>): Promise<string> {
           url = resultUrl
           break
         }
+      } else if (embedUrl) {
+        url = embedUrl
+        break
       }
     }
   }
