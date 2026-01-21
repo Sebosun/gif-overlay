@@ -176,7 +176,7 @@ export class GifCombinerMainStrategy implements GifStrategy {
 
     // likely rethink this, penalization for not having transparent frames should happen
     // but this might be wrong place for it
-    const finalRatio = this.isOverlayTransparent ? 0.1 : this.ratio
+    const finalRatio = this.isOverlayTransparent ? this.ratio : 0.1
 
     const scale = getRatio({
       baseElem: this.baseImage,

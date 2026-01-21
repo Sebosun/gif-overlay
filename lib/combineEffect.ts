@@ -11,15 +11,15 @@ const ASSETS_DIR = "assets/effects";
 const BASE_MAX_RES = { height: 800, width: 800 };
 const maxResTotal = BASE_MAX_RES.height * BASE_MAX_RES.width;
 
-const mainPath = path.resolve(`${__dirname}/../`);
-const dir = path.join(mainPath, ASSETS_DIR);
-const ls = await fs.readdir(dir);
-
 // This needs to be rafctored into a generic function
 export async function combineRandomEffect(
   sourceImg: Buffer | JimpRead | Gif,
   scaleInitImage: boolean,
 ): Promise<Buffer> {
+  const mainPath = path.resolve(`${__dirname}/../`);
+  const dir = path.join(mainPath, ASSETS_DIR);
+  const ls = await fs.readdir(dir);
+
 
   const effectGifs = ls.filter((el) => el.endsWith(".gif"));
   const randomEl = Math.floor(Math.random() * effectGifs.length);
