@@ -13,6 +13,7 @@ export interface CombinerOpts {
   overlay: Gif | JimpRead;
   placement: Placement;
   randomizePositions: boolean
+  ratio?: number
 }
 
 export function jimpGuardType(gif: Gif | JimpRead): gif is JimpRead {
@@ -31,12 +32,17 @@ export class GifCombiner {
 
   aggregateImage!: Gif | JimpRead;
   elementImage!: Gif | JimpRead;
+  ratio: number = 0.25
 
   constructor(options: CombinerOpts) {
     this.base = options.base;
     this.overlay = options.overlay;
     this.placement = options.placement;
     this.randomizePositions = options.randomizePositions
+    if (options.ratio) {
+      this.ratio = options.ratio
+    }
+
     this.init();
   }
 
@@ -46,7 +52,8 @@ export class GifCombiner {
         firstImage: this.base,
         secondImage: this.overlay,
         placement: this.placement,
-        randomizePositions: this.randomizePositions
+        randomizePositions: this.randomizePositions,
+        ratio: this.ratio,
       });
       return;
     }
@@ -55,7 +62,8 @@ export class GifCombiner {
       gifPrimary: this.base,
       gifSecondary: this.overlay,
       placement: this.placement,
-      randomizePositions: this.randomizePositions
+      randomizePositions: this.randomizePositions,
+      ratio: this.ratio,
     });
   }
 

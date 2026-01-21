@@ -10,6 +10,7 @@ export interface TwoImagesStategyOpts {
   secondImage: JimpRead;
   placement: Placement;
   randomizePositions: boolean
+  ratio: number
 }
 
 export class GifCombinerTwoImagesStrategy implements GifStrategy {
@@ -17,19 +18,20 @@ export class GifCombinerTwoImagesStrategy implements GifStrategy {
   overlayImage: JimpRead;
   placement: Placement;
   randomizePositions: boolean
+  ratio: number
 
   constructor(options: TwoImagesStategyOpts) {
     this.baseImage = options.firstImage;
     this.overlayImage = options.secondImage;
     this.placement = options.placement;
     this.randomizePositions = options.randomizePositions
+    this.ratio = options.ratio
   }
 
   async run() {
     const scale = getRatio({
       baseElem: this.baseImage,
       overlayElem: this.overlayImage,
-      penalize: false,
     });
 
     // dimensions after scaling will be done

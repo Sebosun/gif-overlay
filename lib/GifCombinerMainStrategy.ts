@@ -13,6 +13,7 @@ interface MainStrategyOpts {
   gifSecondary: Gif | JimpRead;
   placement: Placement;
   randomizePositions: boolean
+  ratio: number
 }
 
 type Frames = [Bitmap, Bitmap, number];
@@ -24,6 +25,7 @@ export class GifCombinerMainStrategy implements GifStrategy {
 
   totalFrames!: number;
 
+  ratio!: number
   baseImage!: Gif | JimpRead;
   overlayImage!: Gif | JimpRead;
 
@@ -45,7 +47,7 @@ export class GifCombinerMainStrategy implements GifStrategy {
   }
 
   init(options: MainStrategyOpts) {
-    const { gifPrimary, gifSecondary } = options;
+    const { gifPrimary, gifSecondary, ratio } = options;
 
     // const primarySize = gifPrimary.height * gifPrimary.width;
     // const secondarySize = gifSecondary.height * gifSecondary.width;
@@ -53,6 +55,7 @@ export class GifCombinerMainStrategy implements GifStrategy {
     this.baseImage = gifPrimary;
     this.overlayImage = gifSecondary;
     this.randomizePositions = options.randomizePositions
+    this.ratio = ratio
 
     // if (primarySize > secondarySize) {
     //   this.aggregateImage = gifPrimary;
@@ -170,10 +173,15 @@ export class GifCombinerMainStrategy implements GifStrategy {
     for (let i = 0; i < this.totalFrames; i++) {
       frames.push(this.getIndividualFrame(i));
     }
+
+    // likely rethink this, penalization for not having transparent frames should happen
+    // but this might be wrong place for it
+    const finalRatio = this.isOverlayTransparent ? 0.1 : this.ratio
+
     const scale = getRatio({
       baseElem: this.baseImage,
       overlayElem: this.overlayImage,
-      penalize: !this.isOverlayTransparent,
+      ratio: finalRatio
     });
 
     // dimensions after scaling will be done

@@ -50,6 +50,16 @@ export function getPositionsPredictable(options: PositionOptions): Positions {
     };
   }
 
+  if (placement === "center") {
+    const x = (base.width / 2) - (overlay.width / 2)
+    const y = (base.height / 2) - (overlay.height / 2)
+    return {
+      x: x,
+      y: y,
+    };
+  }
+
+
   return {
     x: 0,
     y: 0,

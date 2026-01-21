@@ -2,7 +2,8 @@ export type Placement =
   | "top-left"
   | "top-right"
   | "bottom-left"
-  | "bottom-right";
+  | "bottom-right"
+  | "center"
 
 export class RandomPlacement {
   availablePlacements = [

@@ -4,48 +4,34 @@ import path from "path";
 import { Jimp } from "jimp";
 import { GifCombiner, jimpGuardType } from "./GifCombiner";
 import { getRatio } from "./ratio";
-import { RandomPlacement } from "./placement";
 import sharp from "sharp";
 import type { JimpRead } from "../types/Jimp";
 
-const ASSETS_DIR = "assets/randomizer";
+const ASSETS_DIR = "assets/effects";
 const BASE_MAX_RES = { height: 800, width: 800 };
 const maxResTotal = BASE_MAX_RES.height * BASE_MAX_RES.width;
-
-// If it breaks here idc because the bot wont even start
 
 const mainPath = path.resolve(`${__dirname}/../`);
 const dir = path.join(mainPath, ASSETS_DIR);
 const ls = await fs.readdir(dir);
 
-export async function combineRandomImages(
+// This needs to be rafctored into a generic function
+export async function combineRandomEffect(
   sourceImg: Buffer | JimpRead | Gif,
   scaleInitImage: boolean,
-  isRandom: boolean,
 ): Promise<Buffer> {
 
-  const randomGifs = [] as string[];
+  const effectGifs = ls.filter((el) => el.endsWith(".gif"));
+  const randomEl = Math.floor(Math.random() * effectGifs.length);
+  const randomGif = effectGifs[randomEl];
 
-  const randomPlacements = new RandomPlacement();
-
-  // TODO: refactor so it doesnt fs.readfiles everytime this function launches
-  for (const folder of ls) {
-    const folderPath = path.join(dir, folder);
-    const items = await fs.readdir(folderPath);
-    const gifs = items.filter((el) => el.endsWith(".gif"));
-
-    const randomEl = Math.floor(Math.random() * gifs.length);
-    const randomGif = gifs[randomEl];
-    if (randomGif) {
-      const gifPath = path.join(folderPath, randomGif);
-      randomGifs.push(gifPath);
-    }
+  if (!randomGif) {
+    throw new Error("Random gif")
   }
+  const firstGifLoc = path.join(dir, randomGif);
 
   let targetImg: JimpRead | Gif;
   if (sourceImg instanceof Buffer) {
-    // jimp had some issues with reading some png files, so using sharp for that now and slowly realizing that jimp aint it chef
-
     const process = await sharp(sourceImg)
       .png({
         colors: 256,
@@ -65,38 +51,21 @@ export async function combineRandomImages(
     targetImg = sourceImg as JimpRead | Gif;
   }
 
-  const firstGifLoc = randomGifs.pop();
-
   if (!firstGifLoc) {
     throw new Error("Couldnt get the first gif...")
   }
 
   const firstGif = await GifUtil.read(firstGifLoc);
-  const placement = randomPlacements.get();
 
   const combiner = new GifCombiner({
     base: targetImg,
     overlay: firstGif,
-    placement: placement,
-    randomizePositions: isRandom
+    placement: 'center',
+    randomizePositions: false,
+    ratio: 1.5
   });
 
-  let gif = await combiner.run();
-
-  for (const el of randomGifs) {
-    const placement = randomPlacements.get();
-    const gifElem = await GifUtil.read(el);
-
-    const combiner = new GifCombiner({
-      base: gif,
-      overlay: gifElem,
-      placement: placement,
-      randomizePositions: isRandom
-    });
-
-    gif = await combiner.run();
-  }
-
+  const gif = await combiner.run();
   if (jimpGuardType(gif)) {
     return await gif.getBuffer("image/jpeg");
   }
