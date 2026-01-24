@@ -14,8 +14,8 @@ async function main() {
     ],
   });
 
-  client.once(Events.ClientReady, async (readyClient) => {
-    console.log(`Ready! Logged in as ${readyClient.user.tag}`);
+  client.once(Events.ClientReady, async (clientReady) => {
+    console.log(`Client ready at ${clientReady.user.tag}`)
   });
 
   client.on(Events.MessageCreate, (message) => rawCommandsManager(message, client));
