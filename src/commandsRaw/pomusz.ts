@@ -5,6 +5,7 @@ export async function pomusz(message: OmitPartialGroupDMChannel<Message<boolean>
 \`\`\`
 .boomer - boomerify an image
 .boomerr - boomerify an image, random placements
+.cute - apply an random "cute" overlay onto an image
 \`\`\`
     `)
 }
