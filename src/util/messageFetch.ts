@@ -1,6 +1,7 @@
 import { ChannelType, Message, type Client, type FetchMessagesOptions } from "discord.js";
 import path from "path"
 import fs from "fs/promises"
+import type pino from "pino";
 
 interface ParsedSavedMessage {
   author: string
@@ -41,7 +42,7 @@ export async function getMessagesNoChecks(client: Client<boolean>, channelId: st
 }
 
 // Additional chceks on init
-export async function updateChannelMessages(client: Client<boolean>, channelId: string): Promise<[boolean, ParsedSavedMessage[]]> {
+export async function updateChannelMessages(client: Client<boolean>, channelId: string, logger: pino.Logger): Promise<[boolean, ParsedSavedMessage[]]> {
   const [exists, messages] = await getSavedMessages(channelId)
   const channel = await client.channels.fetch(channelId)
 
@@ -55,10 +56,11 @@ export async function updateChannelMessages(client: Client<boolean>, channelId: 
 
   if (!exists) {
     try {
+      logger.info("Channel doesnt exist, fetching")
       const messages = await messageFetch(client, channelId)
       return [true, messages]
     } catch (e) {
-      console.error(e)
+      logger.info({ err: e }, "error fetching channel")
       return [false, []]
     }
   }
@@ -91,10 +93,11 @@ export async function updateChannelMessages(client: Client<boolean>, channelId: 
   }
 
   try {
+    logger.info("Channel is outdated, fetching")
     const messages = await messageFetch(client, channelId)
     return [true, messages]
   } catch (e) {
-    console.error(e)
+    logger.info({ err: e }, "Error fetching channel")
     return [false, []]
   }
 }
@@ -152,9 +155,6 @@ async function messageFetch(client: Client<boolean>, channelId: string): Promise
     allMessages = [...allMessages, ...messagesNew]
     lastMessageId = messages.last()?.id;
 
-    console.log(`Fetched ${allMessages.length} messages so far...`);
-
-    // TODO: some sleep here 
     if (messages.size < 100) break; // Reached end of available messages
   }
 

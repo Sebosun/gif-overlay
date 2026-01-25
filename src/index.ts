@@ -15,16 +15,17 @@ async function updateAllChannelMessages(client: Client<boolean>) {
   const jsonFiles = messageFiles.filter(el => el.endsWith('.json'))
   const channelFiles = jsonFiles.map(el => {
     const filePath = path.join(messagesPath, el)
-    const name = el.split('.').at(0) ?? ""
+    const id = el.split('.').at(0) ?? ""
     return {
-      name: name,
+      id: id,
       path: filePath
     }
   })
 
   for (const channel of channelFiles) {
     // TODO: some sleep here 
-    await updateChannelMessages(client, channel.name)
+    const channelLogger = logger.child({ channel: channel })
+    await updateChannelMessages(client, channel.id, channelLogger)
   }
 }
 
