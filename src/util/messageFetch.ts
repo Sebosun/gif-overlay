@@ -14,7 +14,34 @@ const getChannelPath = (channelId: string) => {
   return path.join(projectRoot, "assets", "messages", channelId + ".json")
 }
 
-export async function getChannelMessages(client: Client<boolean>, channelId: string): Promise<[boolean, ParsedSavedMessage[]]> {
+// no extra chceks, these are done 
+export async function getMessagesNoChecks(client: Client<boolean>, channelId: string): Promise<[boolean, ParsedSavedMessage[]]> {
+  const [exists, messages] = await getSavedMessages(channelId)
+  const channel = await client.channels.fetch(channelId)
+
+  if (!channel) {
+    return [false, []]
+  }
+
+  if (!channel || channel.type !== ChannelType.GuildText) {
+    return [false, []]
+  }
+
+  if (!exists) {
+    try {
+      const messages = await messageFetch(client, channelId)
+      return [true, messages]
+    } catch (e) {
+      console.error(e)
+      return [false, []]
+    }
+  }
+
+  return [true, messages]
+}
+
+// Additional chceks on init
+export async function updateChannelMessages(client: Client<boolean>, channelId: string): Promise<[boolean, ParsedSavedMessage[]]> {
   const [exists, messages] = await getSavedMessages(channelId)
   const channel = await client.channels.fetch(channelId)
 
@@ -37,6 +64,7 @@ export async function getChannelMessages(client: Client<boolean>, channelId: str
   }
 
   const latestSavedMessage = messages[0] as ParsedSavedMessage
+
   // get just the latest message
   const options: FetchMessagesOptions = { limit: 1 };
 
@@ -49,20 +77,18 @@ export async function getChannelMessages(client: Client<boolean>, channelId: str
   const isSameLastMsg = latestFetchedMsg.id === latestSavedMessage?.id
 
   if (isSameLastMsg) {
-    console.log(isSameLastMsg)
     return [true, messages]
   }
 
   const latestSavedMsgTime = new Date(Number(latestSavedMessage.timeStamp))
 
-  // check if last message saved was within last 24 hours
+  // check if last message saved was within last 4 hours
   const difference = latestFetchedMsg.createdAt.getTime() - latestSavedMsgTime.getTime()
 
-  const hours = 1000 * 60 * 60 * 24
+  const hours = 1000 * 60 * 60 * 4
   if (hours >= difference) {
     return [true, messages]
   }
-
 
   try {
     const messages = await messageFetch(client, channelId)
@@ -71,11 +97,10 @@ export async function getChannelMessages(client: Client<boolean>, channelId: str
     console.error(e)
     return [false, []]
   }
-
 }
 
 
-async function getSavedMessages(channelId: string): Promise<[boolean, ParsedSavedMessage[]]> {
+export async function getSavedMessages(channelId: string): Promise<[boolean, ParsedSavedMessage[]]> {
   const savePath = getChannelPath(channelId)
 
   try {
@@ -93,7 +118,7 @@ async function getSavedMessages(channelId: string): Promise<[boolean, ParsedSave
   }
 }
 
-async function messageFetch(client: Client<boolean>, channelId: string) {
+async function messageFetch(client: Client<boolean>, channelId: string): Promise<ParsedSavedMessage[]> {
   let allMessages = [] as ParsedSavedMessage[];
   let lastMessageId: string | undefined;
 
@@ -129,11 +154,11 @@ async function messageFetch(client: Client<boolean>, channelId: string) {
 
     console.log(`Fetched ${allMessages.length} messages so far...`);
 
+    // TODO: some sleep here 
     if (messages.size < 100) break; // Reached end of available messages
   }
 
   const savePath = getChannelPath(channelId)
-
   await fs.writeFile(savePath, JSON.stringify(allMessages))
 
   return allMessages

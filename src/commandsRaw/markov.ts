@@ -1,13 +1,11 @@
 import type { Client, Message, OmitPartialGroupDMChannel } from "discord.js"
-import { getChannelMessages } from "../util/messageFetch"
+import { getMessagesNoChecks } from "../util/messageFetch"
+
+type Markov = { [Key: string]: string[] }
 
 export async function markov(message: OmitPartialGroupDMChannel<Message<boolean>>, client: Client<boolean>): Promise<void> {
-  type Markov = { [Key: string]: string[] }
-
-  const markovChain = {} as Markov
-
   const channelId = message.channelId
-  const [success, messages] = await getChannelMessages(client, channelId)
+  const [success, messages] = await getMessagesNoChecks(client, channelId)
 
   if (!success) {
     return
@@ -16,31 +14,49 @@ export async function markov(message: OmitPartialGroupDMChannel<Message<boolean>
   const messageAsText = messages.map(el => el.content)
   const text = messageAsText.join(" ").split(" ").filter(el => el !== "")
 
+  const result = generateMarkov(text)
+
+  if (!result) {
+    console.log("No result")
+    message.reply("i am broken miserable man, i have nothing left to live for. i broke and the light is on only by chance")
+    return
+  }
+
+  await message.reply(result)
+}
+
+const stripRegex = /[$&+,;=?#|'^*()%")(]/g
+
+export function generateMarkov(text: string[]): string {
+  const markovChain = {} as Markov
+
   for (let i = 0; i < text.length; i++) {
     if (!text[i]) {
       continue
     }
-    const word = text[i]!.toLowerCase()
+
+    // const word = text[i]!.toLowerCase()
+    const word = text[i]!.toLowerCase().replace(stripRegex, "")
 
     if (!markovChain[word]) {
       markovChain[word] = []
     }
 
     const next = text[i + 1]
-    const next2 = text[i + 2]
     if (next) {
-      const nextWord = next.toLowerCase();
+      // const nextWord = next.toLowerCase()
+      const nextWord = next.toLowerCase().replace(stripRegex, "");
       if (nextWord) {
         markovChain[word].push(nextWord);
       }
     }
 
+    const next2 = text[i + 2]
     if (next2) {
-      const next2Word = next2.toLowerCase();
+      const next2Word = next2.toLowerCase().replace(stripRegex, "");
       if (next2Word) {
         markovChain[word].push(next2Word);
       }
-
     }
   }
 
@@ -73,5 +89,5 @@ export async function markov(message: OmitPartialGroupDMChannel<Message<boolean>
     next = values[randomIdx];
   }
 
-  await message.reply(result.join(" "))
+  return result.join(" ")
 }
