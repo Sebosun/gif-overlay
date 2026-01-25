@@ -56,7 +56,7 @@ export async function rawCommandsManager(message: OmitPartialGroupDMChannel<Mess
     guildId: message.guildId,
     channelId: message.channelId,
     userId: message.author?.id,
-    type: message.type
+    userName: message.author.username,
   });
 
   const userMsg = message.content
