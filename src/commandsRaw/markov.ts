@@ -11,10 +11,11 @@ export async function markov(message: OmitPartialGroupDMChannel<Message<boolean>
     return
   }
 
-  const messageAsText = messages.map(el => el.content)
-  const text = messageAsText.join(" ").split(" ").filter(el => el !== "")
+  const msg = message.content.split(" ")
+  const firstWord = msg[1] // .markov [me]
 
-  const result = generateMarkov(text)
+  const messageAsText = messages.map(el => el.content)
+  const result = generateMarkov(messageAsText, firstWord)
 
   if (!result) {
     console.log("No result")
@@ -27,56 +28,55 @@ export async function markov(message: OmitPartialGroupDMChannel<Message<boolean>
 
 const stripRegex = /[$&+,;=?#|'^*()%")(]/g
 
-export function generateMarkov(text: string[]): string {
+
+const constructMarkov = (texts: string[]): Markov => {
   const markovChain = {} as Markov
 
-  for (let i = 0; i < text.length; i++) {
-    if (!text[i]) {
-      continue
-    }
-
-    // const word = text[i]!.toLowerCase()
-    const word = text[i]!.toLowerCase().replace(stripRegex, "")
-
-    if (!markovChain[word]) {
-      markovChain[word] = []
-    }
-
-    const next = text[i + 1]
-    if (next) {
-      // const nextWord = next.toLowerCase()
-      const nextWord = next.toLowerCase().replace(stripRegex, "");
-      if (nextWord) {
-        markovChain[word].push(nextWord);
+  for (const text of texts) {
+    const split = text.split(" ")
+    for (let i = 0; i < split.length; i++) {
+      if (!split[i]) {
+        continue
       }
-    }
 
-    const next2 = text[i + 2]
-    if (next2) {
-      const next2Word = next2.toLowerCase().replace(stripRegex, "");
-      if (next2Word) {
-        markovChain[word].push(next2Word);
+      // const word = text[i]!.toLowerCase()
+      const word = split[i]!.toLowerCase().replace(stripRegex, "")
+
+      if (!markovChain[word]) {
+        markovChain[word] = []
+      }
+
+      const next = split[i + 1]
+      if (next) {
+        // const nextWord = next.toLowerCase()
+        const nextWord = next.toLowerCase().replace(stripRegex, "");
+        if (nextWord) {
+          markovChain[word].push(nextWord);
+        }
       }
     }
   }
 
+  return markovChain
+}
+
+const generate = (markov: Markov, firstMessage?: string): string => {
   const result = [] as string[]
+  const keys = Object.keys(markov)
 
-  const keys = Object.keys(markovChain)
-
-  let next: string | undefined = undefined
+  let next: string | undefined = firstMessage
 
   while (result.length <= 20) {
     let val: string;
 
-    if (next && markovChain[next]) {
+    if (next && markov[next]) {
       val = next;
     } else {
       const randomKey = Math.floor(Math.random() * keys.length);
       val = keys[randomKey] as string;
     }
 
-    if (!markovChain[val] || markovChain[val]?.length === 0) {
+    if (!markov[val] || markov[val]?.length === 0) {
       // Dead end, pick a new random word
       next = undefined;
       continue;
@@ -84,10 +84,18 @@ export function generateMarkov(text: string[]): string {
 
     result.push(val);
 
-    const values = markovChain[val] as string[];
+    const values = markov[val] as string[];
     const randomIdx = Math.floor(Math.random() * values.length);
     next = values[randomIdx];
   }
 
   return result.join(" ")
+}
+
+export function generateMarkov(text: string[], firstMessage?: string): string {
+  const textSanitized = text.filter(el => el !== "").filter(el => el.split(" ").length > 1)
+  const markovChain = constructMarkov(textSanitized)
+  const result = generate(markovChain, firstMessage)
+
+  return result
 }
