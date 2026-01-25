@@ -5,6 +5,7 @@ import { interactionManager } from "./commands/handleManager";
 import fs from "fs/promises"
 import path from "path";
 import { updateChannelMessages } from "./util/messageFetch";
+import { logger } from "./logger";
 
 async function updateAllChannelMessages(client: Client<boolean>) {
   const projectRoot = process.cwd();
@@ -30,7 +31,12 @@ async function updateAllChannelMessages(client: Client<boolean>) {
 const ONE_MINUTE = 1000 * 60
 
 async function onInit(client: Client<boolean>) {
-  console.log(`Client ready at ${client.user?.username}`)
+  logger.info({
+    tag: client.user?.tag,
+    uid: client.user?.id,
+    guildCount: client.guilds.cache.size
+  }, 'Bot is ready and online');
+
   const ONE_HOUR = ONE_MINUTE * 60
 
   updateAllChannelMessages(client)
@@ -44,7 +50,7 @@ async function onInit(client: Client<boolean>) {
 }
 
 async function main() {
-  const token = process.env.token;
+  const token = process.env.TOKEN;
   // Create a new client instance
   const client = new Client({
     intents: [
@@ -60,6 +66,13 @@ async function main() {
 
   client.on(Events.MessageCreate, (message) => rawCommandsManager(message, client));
   client.on(Events.InteractionCreate, interactionManager);
+
+  client.on(Events.Error, (error) => {
+    logger.error({ error: error }, "Discord Client Error")
+  });
+  client.on(Events.Warn, (info) => {
+    logger.warn({ info: info }, "Discord Client Warning")
+  });
 
   client.login(token);
 }

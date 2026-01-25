@@ -19,9 +19,13 @@ export async function mp4ToGif(mp4Url: string, outputPath: string): Promise<Gif>
       ])
       .save(outputPath)
       .on('end', async () => {
-        await fs.unlink(tempMp4); // Clean up
-        const res = await GifUtil.read(outputPath);
-        resolve(res)
+        try {
+          await fs.unlink(tempMp4); // Clean up
+          const res = await GifUtil.read(outputPath);
+          resolve(res)
+        } catch (e) {
+          reject(e)
+        }
       })
       .on('error', reject);
   });

@@ -56,12 +56,10 @@ export async function combineRandomImages(): Promise<Buffer | null> {
   return gif.buffer;
 }
 
-console.time("Benchmark");
 const result = await combineRandomImages();
 if (!result) {
   throw new Error("Error parsing");
 }
-console.timeEnd("Benchmark");
 
 const savePath = path.join(ASSETS_DIR, `result.gif`);
 await fs.writeFile(savePath, result);

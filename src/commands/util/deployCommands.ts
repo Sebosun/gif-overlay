@@ -5,8 +5,10 @@ import {
 } from "discord.js";
 import commands from "../commands";
 
-const token = process.env.token;
-const clientId = process.env.clientID;
+// This file is needed to update discord commands
+
+const token = process.env.TOKEN;
+const clientId = process.env.CLIENT_ID
 
 if (!token || !clientId) {
   throw new Error("Missing token...");
@@ -18,10 +20,8 @@ for (const [, value] of commands) {
   commandsJSON.push(value.data.toJSON());
 }
 
-// Construct and prepare an instance of the REST module
 const rest = new REST().setToken(token);
 
-// and deploy your commands!
 (async () => {
   try {
     console.log(

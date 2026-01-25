@@ -3,8 +3,10 @@ import { boomerify } from "./boomerify";
 import { pomusz } from "./pomusz";
 import { effect } from "./effect";
 import { markov } from "./markov";
+import { logger } from "../logger";
+import type pino from "pino";
 
-export type ManualCommand = (message: OmitPartialGroupDMChannel<Message<boolean>>, client: Client<boolean>) => Promise<void>
+export type ManualCommand = (message: OmitPartialGroupDMChannel<Message<boolean>>, client: Client<boolean>, logger: pino.Logger) => Promise<void>
 export type Commands = "boomerify" | "pomusz" | "effect" | "markov"
 
 export interface CommandDetails {
@@ -49,6 +51,13 @@ export async function rawCommandsManager(message: OmitPartialGroupDMChannel<Mess
   if (client.user?.id === message.author.id) {
     return;
   }
+  const commandLogger = logger.child({
+    interactionId: message.id,
+    guildId: message.guildId,
+    channelId: message.channelId,
+    userId: message.author?.id,
+    type: message.type
+  });
 
   const userMsg = message.content
 
@@ -57,7 +66,15 @@ export async function rawCommandsManager(message: OmitPartialGroupDMChannel<Mess
     const command = manCommandsRefact[key]
     const isCurrentCommand = command.triggers.some(el => userMsg.startsWith(`${MODIFIER}${el}`))
     if (isCurrentCommand) {
-      command.exec(message, client)
+      const specificLogger = commandLogger.child({ command: key })
+      try {
+        const start = performance.now();
+        specificLogger.info("Launching command")
+        await command.exec(message, client, specificLogger)
+        specificLogger.info({ duration: performance.now() - start }, "Finished command")
+      } catch (e) {
+        specificLogger.error({ err: e }, 'Command execution failed')
+      }
       break
     }
   }

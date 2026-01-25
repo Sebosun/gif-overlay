@@ -211,17 +211,12 @@ export class GifCombinerMainStrategy implements GifStrategy {
       frames.map(async (frame) => {
         const [baseBitmap, overlayBitmap, delay] = frame;
         if (this.useSharp) {
-          console.time("Frame Generation")
           const bitmap = await this.generateSharpFrame(baseBitmap, overlayBitmap, positions, scale);
-          console.timeEnd("Frame Generation");
 
           return new GifFrame(bitmap, { delayCentisecs: delay });
         } else {
-          console.time("Frame Generation");
-
           const bitmap = await this.generateJimpFrame(baseBitmap, overlayBitmap, positions, scale);
 
-          console.timeEnd("Frame Generation");
           return new GifFrame(bitmap, { delayCentisecs: delay });
         }
       }),
