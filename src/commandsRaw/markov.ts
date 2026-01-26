@@ -1,5 +1,6 @@
 import type { Client, Message, OmitPartialGroupDMChannel } from "discord.js"
 import { getMessagesNoChecks } from "../util/messageFetch"
+import fs from "fs/promises"
 
 type Markov = { [Key: string]: string[] }
 
@@ -12,7 +13,7 @@ export async function markov(message: OmitPartialGroupDMChannel<Message<boolean>
   }
 
   const msg = message.content.split(" ")
-  const firstWord = msg[1] // .markov [me]
+  const firstWord = msg[1]?.toLowerCase() // .markov [me]
 
   const messageAsText = messages.map(el => el.content)
   const result = generateMarkov(messageAsText, firstWord)
@@ -28,9 +29,10 @@ export async function markov(message: OmitPartialGroupDMChannel<Message<boolean>
 
 const stripRegex = /[$&+,;=?#|'^*()%")(]/g
 
-
 const constructMarkov = (texts: string[]): Markov => {
   const markovChain = {} as Markov
+
+  const ngrams = 1
 
   for (const text of texts) {
     const split = text.split(" ")
@@ -46,7 +48,7 @@ const constructMarkov = (texts: string[]): Markov => {
         markovChain[word] = []
       }
 
-      const next = split[i + 1]
+      const next = split[i + ngrams]
       if (next) {
         // const nextWord = next.toLowerCase()
         const nextWord = next.toLowerCase().replace(stripRegex, "");
@@ -66,25 +68,21 @@ const generate = (markov: Markov, firstMessage?: string): string => {
 
   let next: string | undefined = firstMessage
 
-  while (result.length <= 20) {
-    let val: string;
 
-    if (next && markov[next]) {
-      val = next;
-    } else {
-      const randomKey = Math.floor(Math.random() * keys.length);
-      val = keys[randomKey] as string;
-    }
+  while (next === undefined) {
+    const randomKeyIdx = Math.floor(Math.random() * keys.length);
+    next = keys[randomKeyIdx] as string;
+  }
 
-    if (!markov[val] || markov[val]?.length === 0) {
-      // Dead end, pick a new random word
+  while (next !== undefined && result.length <= 20) {
+    result.push(next);
+
+    if (!markov[next] || markov[next]?.length === 0) {
       next = undefined;
       continue;
     }
 
-    result.push(val);
-
-    const values = markov[val] as string[];
+    const values = markov[next] as string[];
     const randomIdx = Math.floor(Math.random() * values.length);
     next = values[randomIdx];
   }
@@ -95,7 +93,42 @@ const generate = (markov: Markov, firstMessage?: string): string => {
 export function generateMarkov(text: string[], firstMessage?: string): string {
   const textSanitized = text.filter(el => el !== "").filter(el => el.split(" ").length > 1)
   const markovChain = constructMarkov(textSanitized)
-  const result = generate(markovChain, firstMessage)
+
+  let result = generate(markovChain, firstMessage)
+
+  let attempts = 0
+  while (result.split(" ").length <= 6) {
+    if (attempts < 5) {
+      result = generate(markovChain, firstMessage)
+    } else {
+      result = generate(markovChain)
+    }
+    attempts++
+  }
+
+
+  // const markovKeys = Object.keys(markovChain)
+  // const acc = {} as Record<string, Record<string, number>>
+  //
+  // for (const el of markovKeys) {
+  //   const val = markovChain[el]
+  //   const localAcc = {} as Record<string, number>
+  //
+  //   if (!val) {
+  //     continue
+  //   }
+  //
+  //   for (const subkey of val) {
+  //     if (!localAcc[subkey]) {
+  //       localAcc[subkey] = 0
+  //     }
+  //     localAcc[subkey] += 1
+  //   }
+  //
+  //   acc[el] = localAcc
+  // }
+  //
+  // fs.writeFile('./markov.json', JSON.stringify({ elements: acc }))
 
   return result
 }

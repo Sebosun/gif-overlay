@@ -10,6 +10,5 @@ if (!success) {
 const messageAsText = messages.map(el => el.content)
 
 for (let index = 0; index < 5; index++) {
-  const result = generateMarkov(messageAsText, "me")
-  console.log(index + 1, result, result.split(" ").length, "\n")
+  console.log(index + 1, generateMarkov(messageAsText, "cat"), "\n")
 }
