@@ -10,7 +10,7 @@ interface ParsedSavedMessage {
   timeStamp: string
 }
 
-const getChannelPath = (channelId: string) => {
+export const getChannelPath = (channelId: string) => {
   const projectRoot = process.cwd();
   return path.join(projectRoot, "assets", "messages", channelId + ".json")
 }

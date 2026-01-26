@@ -10,5 +10,5 @@ if (!success) {
 const messageAsText = messages.map(el => el.content)
 
 console.time("Markov")
-console.log(generateMarkovRefactor(messageAsText, "naruto"))
+console.log(await generateMarkovRefactor('1104469255262580748', "naruto"))
 console.timeEnd("Markov")

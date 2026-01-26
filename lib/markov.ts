@@ -1,3 +1,6 @@
+import path from "path"
+import fs from "fs/promises"
+
 const stripRegex = /[$&+,;=?#|'^*()%")(\n]/g
 
 type ChainLink = Map<string, number>
@@ -8,15 +11,38 @@ const sanitize = (text?: string) => {
   return text.toLowerCase().replace(stripRegex, "")
 }
 
+function replacer(key: string, value: Map<string, number>) {
+  if (value instanceof Map) {
+    return {
+      dataType: 'Map',
+      value: Array.from(value.entries()),
+    };
+  } else {
+    return value;
+  }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function reviver(key: unknown, value: any) {
+  if (typeof value === 'object' && value !== null && value.dataType === 'Map') {
+    return new Map(value.value);
+  }
+  return value;
+}
+
 const constructMarkovRefactor = (texts: string[], ngrams: number = 2): MarkovChain => {
   const markovChain = new Map() as MarkovChain
 
+  console.time("One message")
   for (const text of texts) {
     const split = text.split(" ")
     for (let i = 0; i < split.length; i++) {
       if (!split[i]) {
         continue
       }
+
+      if (i + ngrams >= split.length) break
+
       const word = sanitize(split[i])
 
       if (!markovChain.has(word)) {
@@ -24,14 +50,16 @@ const constructMarkovRefactor = (texts: string[], ngrams: number = 2): MarkovCha
       }
 
       const nextWords: string[] = []
+
       for (let j = 0; j < ngrams; j++) {
         const next = split[i + 1 + j]
-        if (next) {
-          nextWords.push(next)
-        }
+        if (!next) break
+        nextWords.push(next)
       }
 
-      if (nextWords.length > 0 && nextWords.length === ngrams) {
+      if (nextWords.length !== ngrams) continue
+
+      if (nextWords.length > 0) {
         const nextWord = sanitize(nextWords.join(" "))
         const curMarkov = markovChain.get(word)
 
@@ -61,14 +89,26 @@ const calculateScore = (input?: Map<string, number>): number => {
 }
 
 
-export function generateMarkovRefactor(text: string[], firstMsg?: string) {
+function prepareTexts(text: string[]): string[] {
   const filterEmpty = text.filter(el => el !== "")
   const sanitized = filterEmpty.filter(el => el.split(" ").length > 1)
 
-  const ngramsOne = constructMarkovRefactor(sanitized, 1)
-  const ngramsTwo = constructMarkovRefactor(sanitized, 2)
-  const ngramsThree = constructMarkovRefactor(sanitized, 3)
-  // const ngramsFour = constructMarkovRefactor(textSanitized, 4)
+  return sanitized
+}
+
+export async function generateMarkovRefactor(channelId: string, firstMsg?: string) {
+  // TODO: additional chceks dawg
+  const savePathOne = getSavePath(channelId, 1)
+  const savePathTwo = getSavePath(channelId, 2)
+  const savePathThree = getSavePath(channelId, 3)
+
+  const ngramsOneText = await fs.readFile(savePathOne, 'utf8')
+  const ngramsTwoText = await fs.readFile(savePathTwo, 'utf8')
+  const ngramsThreeText = await fs.readFile(savePathThree, 'utf8')
+
+  const ngramsOne = JSON.parse(ngramsOneText, reviver) as MarkovChain
+  const ngramsTwo = JSON.parse(ngramsTwoText, reviver) as MarkovChain
+  const ngramsThree = JSON.parse(ngramsThreeText, reviver) as MarkovChain
 
   const countScores = (word: string) => {
     const res = ngramsOne.get(word)
@@ -156,7 +196,7 @@ export function generateMarkovRefactor(text: string[], firstMsg?: string) {
   let result = generate(firstMsg)
 
   let attempts = 0
-  while (result.split(" ").length <= 6 && attempts <= 8) {
+  while (result.split(" ").length <= 5 && attempts <= 8) {
     attempts++
     if (attempts < 5) {
       result = generate(firstMsg)
@@ -166,4 +206,27 @@ export function generateMarkovRefactor(text: string[], firstMsg?: string) {
   }
 
   return result
+}
+
+export const getSavePath = (channelId: string, count: number) => {
+  const projectRoot = process.cwd();
+  const fileName = `${channelId}-markov-ngram${count}.json`
+  return path.join(projectRoot, "assets", "markov", fileName)
+}
+
+export async function generateAndSave(text: string[], channelId: string): Promise<void> {
+  const sanitized = prepareTexts(text)
+
+  const ngramsOne = constructMarkovRefactor(sanitized, 1)
+  const ngramsTwo = constructMarkovRefactor(sanitized, 2)
+  const ngramsThree = constructMarkovRefactor(sanitized, 3)
+
+  const savePathOne = getSavePath(channelId, 1)
+  const savePathTwo = getSavePath(channelId, 2)
+  const savePathThree = getSavePath(channelId, 3)
+  console.log(ngramsOne)
+
+  await fs.writeFile(savePathOne, JSON.stringify(ngramsOne, replacer))
+  await fs.writeFile(savePathTwo, JSON.stringify(ngramsTwo, replacer))
+  await fs.writeFile(savePathThree, JSON.stringify(ngramsThree, replacer))
 }

@@ -6,6 +6,7 @@ import fs from "fs/promises"
 import path from "path";
 import { updateChannelMessages } from "./util/messageFetch";
 import { logger } from "./logger";
+import { generateAndSave } from "../lib/markov";
 
 async function updateAllChannelMessages(client: Client<boolean>) {
   const projectRoot = process.cwd();
@@ -25,7 +26,15 @@ async function updateAllChannelMessages(client: Client<boolean>) {
   for (const channel of channelFiles) {
     // TODO: some sleep here 
     const channelLogger = logger.child({ channel: channel })
-    await updateChannelMessages(client, channel.id, channelLogger)
+    const start = performance.now()
+
+    channelLogger.info("Starting saving channel msgs and parsing markov")
+    const [success, messages] = await updateChannelMessages(client, channel.id, channelLogger)
+    if (success) {
+      const messageAsText = messages.map(el => el.content)
+      await generateAndSave(messageAsText, channel.id)
+    }
+    channelLogger.info({ duration: performance.now() - start, wasFetchSuccess: success }, "Ended saving channel msgs and parsing markov")
   }
 }
 
