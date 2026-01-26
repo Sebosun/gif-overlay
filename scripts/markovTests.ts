@@ -1,4 +1,4 @@
-import { generateMarkov } from "../src/commandsRaw/markov";
+import { generateMarkovRefactor } from "../lib/markov";
 import { getSavedMessages } from "../src/util/messageFetch";
 
 const [success, messages] = await getSavedMessages('1104469255262580748')
@@ -9,6 +9,6 @@ if (!success) {
 
 const messageAsText = messages.map(el => el.content)
 
-for (let index = 0; index < 5; index++) {
-  console.log(index + 1, generateMarkov(messageAsText, "cat"), "\n")
-}
+console.time("Markov")
+console.log(generateMarkovRefactor(messageAsText, "naruto"))
+console.timeEnd("Markov")

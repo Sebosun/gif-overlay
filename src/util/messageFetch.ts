@@ -57,7 +57,7 @@ export async function updateChannelMessages(client: Client<boolean>, channelId: 
   if (!exists) {
     try {
       logger.info("Channel doesnt exist, fetching")
-      const messages = await messageFetch(client, channelId)
+      const messages = await messageFetch(client, channelId, logger)
       return [true, messages]
     } catch (e) {
       logger.info({ err: e }, "error fetching channel")
@@ -94,7 +94,7 @@ export async function updateChannelMessages(client: Client<boolean>, channelId: 
 
   try {
     logger.info("Channel is outdated, fetching")
-    const messages = await messageFetch(client, channelId)
+    const messages = await messageFetch(client, channelId, logger)
     return [true, messages]
   } catch (e) {
     logger.info({ err: e }, "Error fetching channel")
@@ -121,7 +121,7 @@ export async function getSavedMessages(channelId: string): Promise<[boolean, Par
   }
 }
 
-async function messageFetch(client: Client<boolean>, channelId: string): Promise<ParsedSavedMessage[]> {
+async function messageFetch(client: Client<boolean>, channelId: string, logger?: pino.Logger): Promise<ParsedSavedMessage[]> {
   let allMessages = [] as ParsedSavedMessage[];
   let lastMessageId: string | undefined;
 
@@ -131,7 +131,7 @@ async function messageFetch(client: Client<boolean>, channelId: string): Promise
     throw new Error("Channel does not exist or is not a text channel")
   }
 
-  const MAX_MESSAGES = 10_000
+  const MAX_MESSAGES = 25_000
 
   while (allMessages.length < MAX_MESSAGES) {
     const options: FetchMessagesOptions = { limit: 100 }; // Max 100 per request
@@ -140,6 +140,8 @@ async function messageFetch(client: Client<boolean>, channelId: string): Promise
     }
 
     const messages = await channel.messages.fetch(options);
+
+    logger?.info({ curLen: allMessages.length, lastId: options.before }, "Fetched messages")
 
     if (messages.size === 0) break; // No more messages
 
