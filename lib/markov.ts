@@ -224,7 +224,6 @@ export async function generateAndSave(text: string[], channelId: string): Promis
   const savePathOne = getSavePath(channelId, 1)
   const savePathTwo = getSavePath(channelId, 2)
   const savePathThree = getSavePath(channelId, 3)
-  console.log(ngramsOne)
 
   await fs.writeFile(savePathOne, JSON.stringify(ngramsOne, replacer))
   await fs.writeFile(savePathTwo, JSON.stringify(ngramsTwo, replacer))
