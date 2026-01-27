@@ -8,7 +8,9 @@ import { updateChannelMessages } from "./util/messageFetch";
 import { logger } from "./logger";
 import { generateAndSave } from "../lib/markov";
 
-async function updateAllChannelMessages(client: Client<boolean>) {
+const watchedChannels: Set<string> = new Set()
+
+async function getMessagesChannels() {
   const projectRoot = process.cwd();
   const messagesPath = path.join(projectRoot, "assets", "messages")
 
@@ -22,6 +24,13 @@ async function updateAllChannelMessages(client: Client<boolean>) {
       path: filePath
     }
   })
+
+  return channelFiles
+}
+
+
+async function updateAllChannelMessages(client: Client<boolean>) {
+  const channelFiles = await getMessagesChannels()
 
   for (const channel of channelFiles) {
     // TODO: some sleep here 
@@ -38,25 +47,42 @@ async function updateAllChannelMessages(client: Client<boolean>) {
   }
 }
 
-const ONE_MINUTE = 1000 * 60
+async function updateWatchedChannels(): Promise<void> {
+  const channels = await getMessagesChannels()
+
+  const channelsIds = channels.map(el => el.path.split('.')[0] ?? 'INVALID')
+
+  for (const channel of channelsIds) {
+    const hasVal = watchedChannels.has(channel)
+    if (!hasVal) {
+      watchedChannels.add(channel)
+    }
+  }
+
+}
+
 
 async function onInit(client: Client<boolean>) {
+  const ONE_MINUTE = 1000 * 60
+  const ONE_HOUR = ONE_MINUTE * 60
+
+  updateWatchedChannels()
+  updateAllChannelMessages(client)
+
+  setInterval(() => {
+    try {
+      updateAllChannelMessages(client)
+      updateWatchedChannels()
+    } catch (e) {
+      console.error(e)
+    }
+  }, ONE_HOUR)
+
   logger.info({
     tag: client.user?.tag,
     uid: client.user?.id,
     guildCount: client.guilds.cache.size
   }, 'Bot is ready and online');
-
-  const ONE_HOUR = ONE_MINUTE * 60
-
-  updateAllChannelMessages(client)
-  setInterval(() => {
-    try {
-      updateAllChannelMessages(client)
-    } catch (e) {
-      console.error(e)
-    }
-  }, ONE_HOUR)
 }
 
 async function main() {
@@ -74,7 +100,10 @@ async function main() {
     onInit(clientReady)
   });
 
-  client.on(Events.MessageCreate, (message) => rawCommandsManager(message, client));
+  client.on(Events.MessageCreate, (message) => {
+    rawCommandsManager(message, client)
+  });
+
   client.on(Events.InteractionCreate, interactionManager);
 
   client.on(Events.Error, (error) => {

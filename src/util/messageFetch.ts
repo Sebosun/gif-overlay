@@ -102,7 +102,6 @@ export async function updateChannelMessages(client: Client<boolean>, channelId: 
   }
 }
 
-
 export async function getSavedMessages(channelId: string): Promise<[boolean, ParsedSavedMessage[]]> {
   const savePath = getChannelPath(channelId)
 
@@ -145,7 +144,9 @@ async function messageFetch(client: Client<boolean>, channelId: string, logger?:
 
     if (messages.size === 0) break; // No more messages
 
-    const messagesNew = messages.map(el => {
+
+    const messagesWithoutBot = messages.filter(el => el.author.id !== client.user?.id)
+    const messagesNew = messagesWithoutBot.map(el => {
       return {
         author: el.author.id,
         content: el.content,
