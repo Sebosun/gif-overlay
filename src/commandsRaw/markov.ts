@@ -5,7 +5,12 @@ export async function markov(message: OmitPartialGroupDMChannel<Message<boolean>
   const channelId = message.channelId
 
   const msg = message.content.split(" ")
-  const input = msg.splice(0, 1).join(" ")
+  let input: string | undefined = undefined
+
+  if (msg.length > 1) {
+    msg.splice(0, 1)
+    input = msg.join(" ")
+  }
 
   const result = await generateMarkovRefactor(channelId, input)
 
