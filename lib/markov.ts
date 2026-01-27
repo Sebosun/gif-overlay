@@ -175,7 +175,7 @@ export async function generateMarkovRefactor(channelId: string, firstMsg?: strin
       next = arr[randomKeyIdx]
     }
 
-    while (next !== undefined && result.length <= 20) {
+    while (next !== undefined && result.length <= 10) {
       result.push(next);
 
       const nextKey = next.split(" ").at(-1) // in two words, gets the last part
