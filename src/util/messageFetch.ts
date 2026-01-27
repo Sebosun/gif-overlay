@@ -65,7 +65,7 @@ export async function updateChannelMessages(client: Client<boolean>, channelId: 
     }
   }
 
-  const latestSavedMessage = messages[0] as ParsedSavedMessage
+  const latestSavedMessage = messages[0] as ParsedSavedMessage | undefined
 
   // get just the latest message
   const options: FetchMessagesOptions = { limit: 1 };
@@ -82,13 +82,13 @@ export async function updateChannelMessages(client: Client<boolean>, channelId: 
     return [true, messages]
   }
 
-  const latestSavedMsgTime = new Date(Number(latestSavedMessage.timeStamp))
+  const latestSavedMsgTime = new Date(Number(latestSavedMessage?.timeStamp))
 
   // check if last message saved was within last 4 hours
   const difference = latestFetchedMsg.createdAt.getTime() - latestSavedMsgTime.getTime()
 
-  const hours = 1000 * 60 * 60 * 4
-  if (hours >= difference) {
+  const REFRESH_HOURS = 1000 * 60 * 60 * 4
+  if (REFRESH_HOURS >= difference) {
     return [true, messages]
   }
 

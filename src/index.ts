@@ -28,7 +28,6 @@ async function getMessagesChannels() {
   return channelFiles
 }
 
-
 async function updateAllChannelMessages(client: Client<boolean>) {
   const channelFiles = await getMessagesChannels()
 
