@@ -5,9 +5,9 @@ export async function markov(message: OmitPartialGroupDMChannel<Message<boolean>
   const channelId = message.channelId
 
   const msg = message.content.split(" ")
-  const firstWord = msg[1]?.toLowerCase() // .markov [me]
+  const input = msg.splice(0, 1).join(" ")
 
-  const result = await generateMarkovRefactor(channelId, firstWord)
+  const result = await generateMarkovRefactor(channelId, input)
 
   if (!result) {
     console.log("No result")

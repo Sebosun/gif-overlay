@@ -158,10 +158,16 @@ export async function generateMarkovRefactor(channelId: string, firstMsg?: strin
   }
 
   const generate = (initial?: string) => {
-    const result = [] as string[]
+    let result = [] as string[]
     const keys = ngramsThree.keys()
 
     let next: string | undefined = initial
+
+    if (initial && initial.split(" ").length > 0) {
+      const els = initial.split(" ")
+      next = els.pop()
+      result = [...els]
+    }
 
     if (next === undefined) {
       const randomKeyIdx = Math.floor(Math.random() * ngramsOne.size);
@@ -193,13 +199,13 @@ export async function generateMarkovRefactor(channelId: string, firstMsg?: strin
     return result.join(" ")
   }
 
-  let result = generate(firstMsg)
+  let result = generate(firstMsg?.toLocaleLowerCase())
 
   let attempts = 0
   while (result.split(" ").length <= 5 && attempts <= 8) {
     attempts++
     if (attempts < 5) {
-      result = generate(firstMsg)
+      result = generate(firstMsg?.toLocaleLowerCase())
     } else {
       result = generate()
     }
