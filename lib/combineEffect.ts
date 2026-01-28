@@ -20,7 +20,6 @@ export async function combineRandomEffect(
   const dir = path.join(mainPath, ASSETS_DIR);
   const ls = await fs.readdir(dir);
 
-
   const effectGifs = ls.filter((el) => el.endsWith(".gif"));
   const randomEl = Math.floor(Math.random() * effectGifs.length);
   const randomGif = effectGifs[randomEl];

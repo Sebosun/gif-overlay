@@ -3,7 +3,7 @@ import path from "path"
 import fs from "fs/promises"
 import type pino from "pino";
 
-interface ParsedSavedMessage {
+export interface ParsedSavedMessage {
   author: string
   content: string
   id: string

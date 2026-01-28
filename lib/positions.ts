@@ -59,6 +59,16 @@ export function getPositionsPredictable(options: PositionOptions): Positions {
     };
   }
 
+  if (placement === "tomato") {
+    const x = (base.width / 2) - (overlay.width / 2)
+    const y = (base.height / 3) - (overlay.height / 2)
+    return {
+      x: x,
+      y: y,
+    };
+  }
+
+
 
   return {
     x: 0,
@@ -122,8 +132,55 @@ export function getPositionsRandomized(
     };
   }
 
+  if (placement === "center") {
+
+    const oneQuarterX = (base.width / 3) + overlay.width
+    const oneQuarterY = (base.height / 3) + overlay.height
+
+    const lastQuarterX = (base.width - oneQuarterX) - overlay.width
+    const lastQuarterY = (base.height - oneQuarterY) - overlay.height
+
+    const randX = randomNumberInterval(oneQuarterX, lastQuarterX);
+    const randY = randomNumberInterval(oneQuarterY, lastQuarterY);
+
+    return {
+      x: randX,
+      y: randY,
+    };
+  }
+
+  // Is this hardcoded? Yes.
+  // Do i care? No
+  if (placement === "tomato") {
+    const randX = randomNumberInterval(-200, 40);
+    const randY = randomNumberInterval(-150, -50);
+
+    return {
+      x: randX,
+      y: randY,
+    };
+  }
+
+
   return {
     x: randomNumberInterval(0, base.width - overlay.width),
     y: randomNumberInterval(0, base.height - overlay.height),
   };
+}
+
+export function getRandomPosition(
+  options: PositionOptions,
+): Positions {
+  const { base, overlay } = options;
+
+  const startingX = 0 + overlay.width
+  const startingY = 0 + overlay.height
+
+  const endingX = base.width - overlay.width
+  const endingY = base.height - overlay.height
+
+  return {
+    x: randomNumberInterval(startingX, endingX),
+    y: randomNumberInterval(startingY, endingY)
+  }
 }

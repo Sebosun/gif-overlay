@@ -1,6 +1,6 @@
 import type { Client, Message, OmitPartialGroupDMChannel } from "discord.js"
-import { combineRandomImages } from "../../lib/combineRandomImages"
-import { extractGif } from "../util/extractGif"
+import { combineRandomImagesFactory } from "../../lib/combineRandomImages"
+import { extractImage } from "../util/extractGif"
 import { combineRandomEffect } from "../../lib/combineEffect"
 import type pino from "pino"
 
@@ -14,7 +14,7 @@ export async function boomerify(message: OmitPartialGroupDMChannel<Message<boole
   try {
     let start = performance.now();
 
-    const buffer = await extractGif(message)
+    const buffer = await extractImage(message)
     logger.info({ duration: performance.now() - start }, 'Extracting gif')
 
     await message.channel.sendTyping()
@@ -22,7 +22,7 @@ export async function boomerify(message: OmitPartialGroupDMChannel<Message<boole
     const addEffect = Math.floor(Math.random() * 2);
 
     start = performance.now();
-    let result = await combineRandomImages(buffer, true, isRandom);
+    let result = await combineRandomImagesFactory(buffer, true, isRandom);
     logger.info({ duration: performance.now() - start }, 'Combining images')
 
     if (addEffect === 1) {

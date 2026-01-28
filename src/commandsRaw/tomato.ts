@@ -1,8 +1,8 @@
 import type { Message, OmitPartialGroupDMChannel } from "discord.js"
 import { extractImage } from "../util/extractGif"
-import { combineRandomEffect } from "../../lib/combineEffect"
+import { combineWithTomato } from "../../lib/combineRandomImages"
 
-export async function effect(message: OmitPartialGroupDMChannel<Message<boolean>>): Promise<void> {
+export async function tomato(message: OmitPartialGroupDMChannel<Message<boolean>>): Promise<void> {
   const interval = setInterval(async () => {
     await message.channel.sendTyping()
   }, 1000 * 10)
@@ -10,11 +10,12 @@ export async function effect(message: OmitPartialGroupDMChannel<Message<boolean>
   try {
     const buffer = await extractImage(message)
     await message.channel.sendTyping()
-    const result = await combineRandomEffect(buffer, true);
+    const result = await combineWithTomato(buffer, true, true);
+
     if (!result) return;
     await message.channel.sendTyping()
     await message.channel.send({
-      files: [{ attachment: result, name: "effect.gif" }],
+      files: [{ attachment: result, name: "tomato.gif" }],
     });
   } catch (e) {
     await message.reply("This aint if chef, I'm too weak for this one.")

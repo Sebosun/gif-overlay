@@ -2,7 +2,7 @@ import type { JimpRead } from "../types/Jimp";
 import { createCompositeJimp } from "./createComposite";
 import type { GifStrategy } from "./GifCombiner";
 import type { Placement } from "./placement";
-import { getPositionsPredictable, getPositionsRandomized, type Positions } from "./positions";
+import { getPositionsPredictable, getPositionsRandomized, getRandomPosition, type Positions } from "./positions";
 import { getRatio } from "./ratio";
 
 export interface TwoImagesStategyOpts {
@@ -11,6 +11,8 @@ export interface TwoImagesStategyOpts {
   placement: Placement;
   randomizePositions: boolean
   ratio: number
+  randomPlacement: boolean
+
 }
 
 export class GifCombinerTwoImagesStrategy implements GifStrategy {
@@ -20,12 +22,15 @@ export class GifCombinerTwoImagesStrategy implements GifStrategy {
   randomizePositions: boolean
   ratio: number
 
+  randomPlacement = false
+
   constructor(options: TwoImagesStategyOpts) {
     this.baseImage = options.firstImage;
     this.overlayImage = options.secondImage;
     this.placement = options.placement;
     this.randomizePositions = options.randomizePositions
     this.ratio = options.ratio
+    this.randomPlacement = options.randomPlacement
   }
 
   async run() {
@@ -42,19 +47,16 @@ export class GifCombinerTwoImagesStrategy implements GifStrategy {
 
     let positions: Positions
     if (this.randomizePositions) {
-      positions = getPositionsRandomized({
-        base: this.baseImage,
-        overlay: overlayDimensions,
-        placement: this.placement,
-      });
-
+      positions = getPositionsRandomized({ base: this.baseImage, overlay: overlayDimensions, placement: this.placement });
     } else {
-      positions = getPositionsPredictable({
-        base: this.baseImage,
-        overlay: overlayDimensions,
-        placement: this.placement,
-      });
+      positions = getPositionsPredictable({ base: this.baseImage, overlay: overlayDimensions, placement: this.placement });
     }
+
+    if (this.randomPlacement) {
+      positions = getRandomPosition({ base: this.baseImage, overlay: overlayDimensions, placement: this.placement })
+    }
+
+
 
 
     return createCompositeJimp({

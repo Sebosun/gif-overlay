@@ -1,6 +1,6 @@
 import { Jimp, type Bitmap } from "jimp";
 import { GifFrame, GifCodec, Gif, GifUtil } from "gifwrap";
-import { getPositionsPredictable, getPositionsRandomized, type Positions } from "./positions";
+import { getPositionsPredictable, getPositionsRandomized, getRandomPosition, type Positions } from "./positions";
 import sharp from "sharp";
 import { createCompositeJimp } from "./createComposite";
 import type { GifStrategy } from "./GifCombiner";
@@ -14,6 +14,7 @@ interface MainStrategyOpts {
   placement: Placement;
   randomizePositions: boolean
   ratio: number
+  randomPlacement: boolean
 }
 
 type Frames = [Bitmap, Bitmap, number];
@@ -32,6 +33,7 @@ export class GifCombinerMainStrategy implements GifStrategy {
   isBaseTransparent: boolean = false;
   isOverlayTransparent: boolean = false;
   randomizePositions: boolean = false
+  randomPlacement: boolean = false
 
   constructor(options: MainStrategyOpts) {
     this.placement = options.placement;
@@ -56,6 +58,7 @@ export class GifCombinerMainStrategy implements GifStrategy {
     this.overlayImage = gifSecondary;
     this.randomizePositions = options.randomizePositions
     this.ratio = ratio
+    this.randomPlacement = options.randomPlacement
 
     // if (primarySize > secondarySize) {
     //   this.aggregateImage = gifPrimary;
@@ -192,20 +195,16 @@ export class GifCombinerMainStrategy implements GifStrategy {
 
     let positions: Positions
     if (this.randomizePositions) {
-      positions = getPositionsRandomized({
-        base: this.baseImage,
-        overlay: overlayDimensions,
-        placement: this.placement,
-      });
-
+      positions = getPositionsRandomized({ base: this.baseImage, overlay: overlayDimensions, placement: this.placement });
     } else {
-      positions = getPositionsPredictable({
-        base: this.baseImage,
-        overlay: overlayDimensions,
-        placement: this.placement,
-      });
+      positions = getPositionsPredictable({ base: this.baseImage, overlay: overlayDimensions, placement: this.placement });
     }
 
+    if (this.randomPlacement) {
+      positions = getRandomPosition({ base: this.baseImage, overlay: overlayDimensions, placement: this.placement })
+    }
+
+    console.log(positions)
 
     const acc = await Promise.all(
       frames.map(async (frame) => {

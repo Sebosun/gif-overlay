@@ -89,7 +89,7 @@ const calculateScore = (input?: Map<string, number>): number => {
 }
 
 
-function prepareTexts(text: string[]): string[] {
+export function prepareTexts(text: string[]): string[] {
   const filterEmpty = text.filter(el => el !== "")
   const sanitized = filterEmpty.filter(el => el.split(" ").length > 1)
 

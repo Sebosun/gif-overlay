@@ -13,6 +13,7 @@ export interface CombinerOpts {
   overlay: Gif | JimpRead;
   placement: Placement;
   randomizePositions: boolean
+  randomPlacement?: boolean
   ratio?: number
 }
 
@@ -25,6 +26,7 @@ export class GifCombiner {
   overlay: Gif | JimpRead;
   placement: Placement;
   randomizePositions: boolean
+  randomPlacement = false
 
   strategy!: GifStrategy;
 
@@ -43,6 +45,10 @@ export class GifCombiner {
       this.ratio = options.ratio
     }
 
+    if (options.randomPlacement) {
+      this.randomPlacement = options.randomPlacement
+    }
+
     this.init();
   }
 
@@ -54,6 +60,7 @@ export class GifCombiner {
         placement: this.placement,
         randomizePositions: this.randomizePositions,
         ratio: this.ratio,
+        randomPlacement: this.randomPlacement
       });
       return;
     }
@@ -64,6 +71,7 @@ export class GifCombiner {
       placement: this.placement,
       randomizePositions: this.randomizePositions,
       ratio: this.ratio,
+      randomPlacement: this.randomPlacement
     });
   }
 

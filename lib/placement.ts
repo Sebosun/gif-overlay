@@ -4,6 +4,7 @@ export type Placement =
   | "bottom-left"
   | "bottom-right"
   | "center"
+  | "tomato"
 
 export class RandomPlacement {
   availablePlacements = [

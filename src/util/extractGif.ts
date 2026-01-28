@@ -10,7 +10,7 @@ const EXTRACT_GIF_ERRORS = {
   fetchError: "Error fecthing the url"
 } as const
 
-export async function extractGif(message: OmitPartialGroupDMChannel<Message<boolean>>): Promise<Buffer | Gif> {
+export async function extractImage(message: OmitPartialGroupDMChannel<Message<boolean>>): Promise<Buffer | Gif> {
   let buffer: Buffer | Gif
   const url = await getUrl(message)
   const urlOBJ = new URL(url)

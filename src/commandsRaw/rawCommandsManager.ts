@@ -5,9 +5,10 @@ import { effect } from "./effect";
 import { markov } from "./markov";
 import { logger } from "../logger";
 import type pino from "pino";
+import { tomato } from "./tomato";
 
 export type ManualCommand = (message: OmitPartialGroupDMChannel<Message<boolean>>, client: Client<boolean>, logger: pino.Logger) => Promise<void>
-export type Commands = "boomerify" | "pomusz" | "effect" | "markov"
+export type Commands = "boomerify" | "pomusz" | "effect" | "markov" | "tomato"
 
 export interface CommandDetails {
   description: string
@@ -42,6 +43,12 @@ export const manCommandsRefact: Record<Commands, CommandDetails> = {
     description: "generate a random sentence from other sentences said in the channel",
     exec: markov,
     triggers: ["markov", "random"],
+  },
+  tomato: {
+    name: "tomato",
+    description: "throw a tomato at an image",
+    exec: tomato,
+    triggers: ["tomato"],
   },
 } as const
 
