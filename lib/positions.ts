@@ -1,4 +1,5 @@
 import type { Placement } from "./placement";
+import { randomNumberInterval } from "./randomNumberInterval";
 
 interface Sizes {
   width: number;
@@ -76,9 +77,6 @@ export function getPositionsPredictable(options: PositionOptions): Positions {
   };
 }
 
-function randomNumberInterval(min: number, max: number): number {
-  return Math.floor(Math.random() * (max - min + 1) + min);
-}
 
 export function getPositionsRandomized(
   options: PositionOptions,
