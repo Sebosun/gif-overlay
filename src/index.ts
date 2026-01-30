@@ -7,6 +7,7 @@ import path from "path";
 import { updateChannelMessages } from "./util/messageFetch";
 import { logger } from "./logger";
 import { generateAndSave } from "../lib/markov";
+import { ensureUploadFoldersExist, ensureUserFolderExists } from "lib/ensureFoldersExist";
 
 const watchedChannels: Set<string> = new Set()
 
@@ -76,7 +77,6 @@ async function onInit(client: Client<boolean>) {
       console.error(e)
     }
   }, ONE_HOUR)
-
   logger.info({
     tag: client.user?.tag,
     uid: client.user?.id,
@@ -85,6 +85,7 @@ async function onInit(client: Client<boolean>) {
 }
 
 async function main() {
+  await ensureUploadFoldersExist()
   const token = process.env.TOKEN;
   // Create a new client instance
   const client = new Client({

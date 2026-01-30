@@ -1,6 +1,6 @@
 import type { Message, OmitPartialGroupDMChannel } from "discord.js"
-import { extractImage } from "../util/extractGif"
-import { combineWithTomato } from "../../lib/combineRandomImages"
+import { extractImagePathName } from "../util/extractGif"
+import { ffmpegCombineTomato } from "lib/ffmpeg"
 
 export async function tomato(message: OmitPartialGroupDMChannel<Message<boolean>>): Promise<void> {
   const interval = setInterval(async () => {
@@ -8,14 +8,15 @@ export async function tomato(message: OmitPartialGroupDMChannel<Message<boolean>
   }, 1000 * 10)
 
   try {
-    const buffer = await extractImage(message)
+    const imagePath = await extractImagePathName(message)
     await message.channel.sendTyping()
-    const result = await combineWithTomato(buffer, true, true);
 
-    if (!result) return;
-    await message.channel.sendTyping()
+    const res = await ffmpegCombineTomato(imagePath)
+
+    // if (!result) return;
+    // await message.channel.sendTyping()
     await message.channel.send({
-      files: [{ attachment: result, name: "tomato.gif" }],
+      files: [{ attachment: res, name: "tomato.gif" }],
     });
   } catch (e) {
     await message.reply("This aint if chef, I'm too weak for this one.")
