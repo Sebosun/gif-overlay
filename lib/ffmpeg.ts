@@ -24,17 +24,17 @@ const commandBuilder = (options: CommandBuilder) => {
 
   const scale = "[1:v]scale=w=oh*dar:h=rh[scaled]"
 
-  let center = ""
-  const randomX = randomNumberInterval(-50, 50)
+  // let center = ""
+  let center = `x=(W-w)/2:`
   const randomY = randomNumberInterval(-50, 50)
 
-  if (randomX >= 0) {
-    center += `x=(W-w)-${Math.abs(randomX)}/2`
-  } else {
-    center += `x=(W-w)+${Math.abs(randomX)}/2`
-  }
-
-  center += ":"
+  // if (randomX >= 0) {
+  //   center += `x=(W-w)-${Math.abs(randomX)}/2`
+  // } else {
+  //   center += `x=(W-w)+${Math.abs(randomX)}/2`
+  // }
+  //
+  // center += ":"
 
   if (randomY >= 0) {
     center += `y=(H-h)-${Math.abs(randomY)}/2`
