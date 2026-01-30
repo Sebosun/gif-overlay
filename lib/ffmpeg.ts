@@ -19,8 +19,11 @@ const commandBuilder = (options: CommandBuilder) => {
   }
 
   const inputs = `-i ${bg} -i ${ov}`
+
   commandParts.push(inputs)
+
   commandParts.push("-filter_complex")
+
 
   const scale = "[1:v]scale=w=oh*dar:h=rh[scaled]"
 
@@ -54,6 +57,11 @@ const commandBuilder = (options: CommandBuilder) => {
   return commandParts.join(" ")
 }
 
+const optimizeCommand = (input: string, output: string) => {
+  const res = `ffmpeg -i ${input} -vf "scale=300:-1:flags=lanczos,fps=10" -loop 0 ${output}`
+  return res
+}
+
 export async function ffmpegCombineTomato(inputImagePath: string): Promise<string> {
   const projectRoot = process.cwd();
 
@@ -66,6 +74,8 @@ export async function ffmpegCombineTomato(inputImagePath: string): Promise<strin
   }
 
   const resultPath = path.join(getTransformedLocation(), `${fileName}.gif`)
+  const optimizedPath = path.join(getTransformedLocation(), `${fileName}--result.gif`)
+
 
   const command = commandBuilder({
     background: inputImagePath,
@@ -73,15 +83,26 @@ export async function ffmpegCombineTomato(inputImagePath: string): Promise<strin
     resultPath: resultPath
   })
 
-  console.log("Command", command)
+  const optCommand = optimizeCommand(resultPath, optimizedPath)
 
-  return new Promise((resolve, reject) => {
+
+  await new Promise((resolve, reject) => {
     cp.exec(command, (error) => {
       if (error) {
         reject(error)
       }
 
       resolve(resultPath)
+    })
+  })
+
+  return await new Promise((resolve, reject) => {
+    cp.exec(optCommand, (error) => {
+      if (error) {
+        reject(error)
+      }
+
+      resolve(optimizedPath)
     })
   })
 }

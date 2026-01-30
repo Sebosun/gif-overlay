@@ -97,7 +97,7 @@ async function main() {
   });
 
   client.once(Events.ClientReady, async (clientReady) => {
-    onInit(clientReady)
+    // onInit(clientReady)
   });
 
   client.on(Events.MessageCreate, (message) => {
