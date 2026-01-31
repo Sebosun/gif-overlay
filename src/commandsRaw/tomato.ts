@@ -19,13 +19,16 @@ export async function tomato(message: OmitPartialGroupDMChannel<Message<boolean>
 
   if (amount > 50) {
     await message.reply("Try a lower number bozo don't explode my pc")
+    clearInterval(interval)
     return
   }
 
   if (amount < -2) {
     await message.reply(`Uuugh i'd like to throw ${amount} tomatoes please, grab em from the negativity of space`)
+    clearInterval(interval)
     return
   }
+
 
   try {
     const imagePath = await extractImagePathName(message)
