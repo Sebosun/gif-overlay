@@ -48,7 +48,7 @@ export const manCommandsRefact: Record<Commands, CommandDetails> = {
     name: "tomato",
     description: "throw a tomato at an image",
     exec: tomato,
-    triggers: ["tomato"],
+    triggers: ["tomato", "tomato [amount]"],
   },
 } as const
 

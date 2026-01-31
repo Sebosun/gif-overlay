@@ -7,14 +7,32 @@ export async function tomato(message: OmitPartialGroupDMChannel<Message<boolean>
     await message.channel.sendTyping()
   }, 1000 * 10)
 
+  const msg = message.content.split(" ")
+
+  let amount = 1
+  for (const m of msg) {
+    const tryInt = Number.parseInt(m, 10)
+    if (!Number.isNaN(tryInt)) {
+      amount = tryInt
+    }
+  }
+
+  if (amount > 50) {
+    await message.reply("Try a lower number bozo don't explode my pc")
+    return
+  }
+
+  if (amount < -2) {
+    await message.reply(`Uuugh i'd like to throw ${amount} tomatoes please, grab em from the negativity of space`)
+    return
+  }
+
   try {
     const imagePath = await extractImagePathName(message)
     await message.channel.sendTyping()
 
-    const res = await ffmpegCombineTomato(imagePath)
+    const res = await ffmpegCombineTomato(imagePath, amount)
 
-    // if (!result) return;
-    // await message.channel.sendTyping()
     await message.channel.send({
       files: [{ attachment: res, name: "tomato.gif" }],
     });

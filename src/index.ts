@@ -7,7 +7,7 @@ import path from "path";
 import { updateChannelMessages } from "./util/messageFetch";
 import { logger } from "./logger";
 import { generateAndSave } from "../lib/markov";
-import { ensureUploadFoldersExist, ensureUserFolderExists } from "lib/ensureFoldersExist";
+import { ensureUploadFoldersExist } from "lib/ensureFoldersExist";
 
 const watchedChannels: Set<string> = new Set()
 
@@ -97,7 +97,7 @@ async function main() {
   });
 
   client.once(Events.ClientReady, async (clientReady) => {
-    // onInit(clientReady)
+    onInit(clientReady)
   });
 
   client.on(Events.MessageCreate, (message) => {
