@@ -91,7 +91,7 @@ const optimizeCommand = (input: string, output: string) => {
   return `ffmpeg -y -i ${input} -vf "scale=300:-1:flags=lanczos,fps=10" -loop 0 ${output}`
 }
 
-export async function ffmpegCombineTomato(inputImagePath: string, amount: number = 1): Promise<string> {
+export async function ffmpegCombineTomato(inputImagePath: string, amount: number = 1): Promise<[unopt: string, optimized: string]> {
   const projectRoot = process.cwd();
 
   const tomatoPath = path.join(projectRoot, "assets", "tomato", "tomato.gif")
@@ -114,14 +114,11 @@ export async function ffmpegCombineTomato(inputImagePath: string, amount: number
 
   const optCommand = optimizeCommand(resultPath, optimizedPath)
 
-  console.log(command)
-  // console.log(optCommand)
   await new Promise((resolve, reject) => {
     cp.exec(command, (error) => {
       if (error) {
         reject(error)
       }
-
       resolve(resultPath)
     })
   })
@@ -132,7 +129,7 @@ export async function ffmpegCombineTomato(inputImagePath: string, amount: number
         reject(error)
       }
 
-      resolve(optimizedPath)
+      resolve([resultPath, optimizedPath])
     })
   })
 }
