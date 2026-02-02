@@ -1,8 +1,8 @@
-import type { JimpRead } from "../types/Jimp";
-import { createCompositeJimp } from "./createComposite";
+import { createCompositeJimp } from "lib/combiner/createComposite";
+import type { Placement } from "lib/combiner/placement";
+import { type Positions, getPositionsRandomized, getPositionsPredictable, getRandomPosition } from "lib/combiner/positions";
+import type { JimpRead } from "types/Jimp";
 import type { GifStrategy } from "./GifCombiner";
-import type { Placement } from "./placement";
-import { getPositionsPredictable, getPositionsRandomized, getRandomPosition, type Positions } from "./positions";
 import { getRatio } from "./ratio";
 
 export interface TwoImagesStategyOpts {
@@ -55,9 +55,6 @@ export class GifCombinerTwoImagesStrategy implements GifStrategy {
     if (this.randomPlacement) {
       positions = getRandomPosition({ base: this.baseImage, overlay: overlayDimensions, placement: this.placement })
     }
-
-
-
 
     return createCompositeJimp({
       frame1: this.baseImage.bitmap,

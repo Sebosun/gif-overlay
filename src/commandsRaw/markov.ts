@@ -1,5 +1,5 @@
 import type { Message, OmitPartialGroupDMChannel } from "discord.js"
-import { generateMarkovRefactor } from "../../lib/markov"
+import { generateMarkovRefactor } from "../../lib/markov/markov"
 
 export async function markov(message: OmitPartialGroupDMChannel<Message<boolean>>): Promise<void> {
   const channelId = message.channelId

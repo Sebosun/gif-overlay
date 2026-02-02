@@ -1,15 +1,15 @@
 import { exit } from "node:process";
 import { parseArgs } from "node:util";
 import fs from "fs/promises";
-import path from "path";
-import { ffmpegCombineTomato } from "lib/ffmpeg";
+import { ffmpegCombineTomato } from "lib/ffmpeg/combineTomato";
 
 async function cli() {
   const { positionals } = parseArgs({
     allowPositionals: true,
   });
 
-  const savePath = positionals.pop();
+  positionals.pop();
+  // const savePath = positionals.pop();
   const targetPath = positionals.pop();
 
   if (!targetPath) {

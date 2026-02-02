@@ -1,6 +1,6 @@
 import type { Message, OmitPartialGroupDMChannel } from "discord.js"
 import { extractImage } from "../util/extractGif"
-import { combineRandomEffect } from "../../lib/combineEffect"
+import { combineRandomEffect } from "../../lib/combiner/combineEffect"
 
 export async function effect(message: OmitPartialGroupDMChannel<Message<boolean>>): Promise<void> {
   const interval = setInterval(async () => {

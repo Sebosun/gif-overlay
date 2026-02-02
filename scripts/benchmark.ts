@@ -2,7 +2,7 @@ import fs from "fs/promises";
 import { GifUtil } from "gifwrap";
 import path from "path";
 import { Jimp } from "jimp";
-import { GifCombiner, jimpGuardType } from "../lib/GifCombiner";
+import { GifCombiner, jimpGuardType } from "../lib/combiner/GifCombiner";
 
 const ASSETS_DIR = "benchmark-assets/";
 const baseImage = "image.jpg";

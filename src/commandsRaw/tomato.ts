@@ -1,7 +1,7 @@
+import { extractImagePathName } from "@/util/extractGif"
 import type { Message, OmitPartialGroupDMChannel } from "discord.js"
-import { extractImagePathName } from "../util/extractGif"
-import { ffmpegCombineTomato } from "lib/ffmpeg"
-import { cleanupFiles } from "lib/cleanupFiles"
+import { ffmpegCombineTomato } from "lib/ffmpeg/combineTomato"
+import { cleanupFiles } from "lib/files/cleanupFiles"
 
 export async function tomato(message: OmitPartialGroupDMChannel<Message<boolean>>): Promise<void> {
   const interval = setInterval(async () => {

@@ -1,4 +1,3 @@
-import { generateMarkovRefactor, prepareTexts } from "../lib/markov";
 import { getSavedMessages, type ParsedSavedMessage } from "../src/util/messageFetch";
 
 const [success, messages] = await getSavedMessages('1104469255262580748')

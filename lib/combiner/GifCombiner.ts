@@ -2,7 +2,7 @@ import type { Gif } from "gifwrap";
 import { GifCombinerTwoImagesStrategy } from "./GifCombinerTwoImagesStrategy";
 import { GifCombinerMainStrategy } from "./GifCombinerMainStrategy";
 import type { Placement } from "./placement";
-import type { JimpRead } from "../types/Jimp";
+import type { JimpRead } from "../../types/Jimp";
 
 export interface GifStrategy {
   run(): Promise<JimpRead | Gif>;

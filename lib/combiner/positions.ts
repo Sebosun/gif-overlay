@@ -1,5 +1,5 @@
 import type { Placement } from "./placement";
-import { randomNumberInterval } from "./randomNumberInterval";
+import { randomNumberInterval } from "../randomNumberInterval";
 
 interface Sizes {
   width: number;

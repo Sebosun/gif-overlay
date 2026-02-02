@@ -1,7 +1,7 @@
 import type { Client, Message, OmitPartialGroupDMChannel } from "discord.js"
-import { combineRandomImagesFactory } from "../../lib/combineRandomImages"
+import { combineRandomImagesFactory } from "../../lib/combiner/combineRandomImages"
 import { extractImage } from "../util/extractGif"
-import { combineRandomEffect } from "../../lib/combineEffect"
+import { combineRandomEffect } from "../../lib/combiner/combineEffect"
 import type pino from "pino"
 
 export async function boomerify(message: OmitPartialGroupDMChannel<Message<boolean>>, _: Client<boolean>, logger: pino.Logger): Promise<void> {

@@ -2,10 +2,10 @@ import fs from "fs/promises";
 import { Gif, GifUtil } from "gifwrap";
 import path from "path";
 import { Jimp } from "jimp";
-import { GifCombiner, jimpGuardType } from "./GifCombiner";
 import { getRatio } from "./ratio";
 import sharp from "sharp";
-import type { JimpRead } from "../types/Jimp";
+import type { JimpRead } from "types/Jimp";
+import { GifCombiner, jimpGuardType } from "./GifCombiner";
 
 const ASSETS_DIR = "assets/effects";
 const BASE_MAX_RES = { height: 800, width: 800 };

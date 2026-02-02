@@ -6,8 +6,8 @@ import fs from "fs/promises"
 import path from "path";
 import { updateChannelMessages } from "./util/messageFetch";
 import { logger } from "./logger";
-import { generateAndSave } from "../lib/markov";
-import { ensureUploadFoldersExist } from "lib/ensureFoldersExist";
+import { generateAndSave } from "../lib/markov/markov";
+import { ensureUploadFoldersExist } from "lib/files/ensureFoldersExist";
 
 const watchedChannels: Set<string> = new Set()
 

@@ -2,11 +2,11 @@ import fs from "fs/promises";
 import { Gif, GifUtil } from "gifwrap";
 import path from "path";
 import { Jimp } from "jimp";
-import { GifCombiner, jimpGuardType } from "./GifCombiner";
 import { getRatio } from "./ratio";
-import { RandomPlacement, type Placement } from "./placement";
 import sharp from "sharp";
-import type { JimpRead } from "../types/Jimp";
+import type { JimpRead } from "types/Jimp";
+import { GifCombiner, jimpGuardType } from "./GifCombiner";
+import { type Placement, RandomPlacement } from "./placement";
 
 const RANDOM_DIR = "assets/randomizer";
 const EFFECTS_DIR = "assets/effects";

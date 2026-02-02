@@ -1,13 +1,10 @@
-import path from "path"
-import cp from "child_process"
-import { getTransformedLocation } from "./useLocation"
-import { randomNumberInterval } from "./randomNumberInterval"
+import { randomNumberInterval } from "lib/randomNumberInterval"
 
 interface CommandBuilder {
   background: string, overlay: string, resultPath: string, amount: number
 }
 
-const getCentering = () => {
+export function getCentering() {
   let center = ``
   const randomX = randomNumberInterval(-200, 200)
   const randomY = randomNumberInterval(-50, 600)
@@ -30,7 +27,7 @@ const getCentering = () => {
   return center
 }
 
-const commandBuilder = (options: CommandBuilder) => {
+export function commandBuilder(options: CommandBuilder) {
   const { background: bg, overlay: ov, resultPath, amount } = options
 
   const collector = ['ffmpeg']
@@ -70,7 +67,6 @@ const commandBuilder = (options: CommandBuilder) => {
   }
 
   const filterJoined = `-filter_complex "${setupRef};${scale.join(";")};${overlay.join(";")}"`
-  console.log(filterJoined)
 
   const confirmReplace = "-y"
 
@@ -87,49 +83,6 @@ const commandBuilder = (options: CommandBuilder) => {
   return collector.join(" ")
 }
 
-const optimizeCommand = (input: string, output: string) => {
+export const optimizeCommand = (input: string, output: string) => {
   return `ffmpeg -y -i ${input} -vf "scale=300:-1:flags=lanczos,fps=10" -loop 0 ${output}`
-}
-
-export async function ffmpegCombineTomato(inputImagePath: string, amount: number = 1): Promise<[unopt: string, optimized: string]> {
-  const projectRoot = process.cwd();
-
-  const tomatoPath = path.join(projectRoot, "assets", "tomato", "tomato.gif")
-
-  const fileName = inputImagePath.split('/').pop()?.split(".")[0]
-  if (!fileName) {
-    console.error("No extension", fileName)
-    throw new Error("You failed")
-  }
-
-  const resultPath = path.join(getTransformedLocation(), `${fileName}.gif`)
-  const optimizedPath = path.join(getTransformedLocation(), `${fileName}--result.gif`)
-
-  const command = commandBuilder({
-    background: inputImagePath,
-    overlay: tomatoPath,
-    resultPath: resultPath,
-    amount: amount
-  })
-
-  const optCommand = optimizeCommand(resultPath, optimizedPath)
-
-  await new Promise((resolve, reject) => {
-    cp.exec(command, (error) => {
-      if (error) {
-        reject(error)
-      }
-      resolve(resultPath)
-    })
-  })
-
-  return await new Promise((resolve, reject) => {
-    cp.exec(optCommand, (error) => {
-      if (error) {
-        reject(error)
-      }
-
-      resolve([resultPath, optimizedPath])
-    })
-  })
 }

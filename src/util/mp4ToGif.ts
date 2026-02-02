@@ -2,7 +2,6 @@ import ffmpeg from "fluent-ffmpeg"
 import fs from 'fs/promises'
 import { Gif, GifUtil } from "gifwrap"
 
-
 // thanks ai ig, discord is annoying enough where they will store (randomly!)
 // certain gifs as mp4s and certain as thumbnails
 export async function mp4ToGif(mp4Url: string, outputPath: string): Promise<Gif> {

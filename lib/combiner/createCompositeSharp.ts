@@ -4,7 +4,7 @@ import type { Placement } from "./placement";
 import { getRatio } from "./ratio";
 import sharp from "sharp";
 import { getPositionsPredictable } from "./positions";
-import type { JimpRead } from "../types/Jimp";
+import type { JimpRead } from "types/Jimp";
 
 async function ensureRGBA(bitmap: JimpBitmap) {
   const jimp = new Jimp(bitmap);
