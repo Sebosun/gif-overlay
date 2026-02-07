@@ -7,10 +7,8 @@ import sharp from "sharp";
 import type { JimpRead } from "types/Jimp";
 import { GifCombiner, jimpGuardType } from "./GifCombiner";
 import { type Placement, RandomPlacement } from "./placement";
+import { getEffectsDir, getRandomDir, getTomatoDir } from "lib/files/useLocation";
 
-const RANDOM_DIR = "assets/randomizer";
-const EFFECTS_DIR = "assets/effects";
-const TOMATO_DIR = "assets/tomato";
 const BASE_MAX_RES = { height: 600, width: 600 };
 const maxResTotal = BASE_MAX_RES.height * BASE_MAX_RES.width;
 
@@ -18,8 +16,7 @@ const maxResTotal = BASE_MAX_RES.height * BASE_MAX_RES.width;
 export async function combineRandomImagesFactory(sourceImg: Buffer | JimpRead | Gif, scaleInitImage: boolean, isRandom: boolean,): Promise<Buffer> {
   const randomGifs = [] as string[];
 
-  const mainPath = path.resolve(`${__dirname}/../`);
-  const dir = path.join(mainPath, RANDOM_DIR);
+  const dir = getRandomDir()
   const ls = await fs.readdir(dir);
 
   // TODO: refactor so it doesnt fs.readfiles everytime this function launches
@@ -40,8 +37,7 @@ export async function combineRandomImagesFactory(sourceImg: Buffer | JimpRead | 
 }
 
 export async function combineRandomEffectFactory(sourceImg: Buffer | JimpRead | Gif, scaleInitImage: boolean, isRandom: boolean): Promise<Buffer> {
-  const mainPath = path.resolve(`${__dirname}/../`);
-  const dir = path.join(mainPath, EFFECTS_DIR);
+  const dir = getEffectsDir()
   const ls = await fs.readdir(dir);
 
   const effectGifs = ls.filter((el) => el.endsWith(".gif"));
@@ -59,8 +55,7 @@ export async function combineRandomEffectFactory(sourceImg: Buffer | JimpRead | 
 }
 
 export async function combineWithTomato(sourceImg: Buffer | JimpRead | Gif, scaleInitImage: boolean, randomizePositions: boolean): Promise<Buffer> {
-  const mainPath = path.resolve(`${__dirname}/../`);
-  const dir = path.join(mainPath, TOMATO_DIR);
+  const dir = getTomatoDir()
   const ls = await fs.readdir(dir);
 
   const effectGifs = ls.filter((el) => el.endsWith(".gif"));

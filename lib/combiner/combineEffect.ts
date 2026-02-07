@@ -6,8 +6,8 @@ import { getRatio } from "./ratio";
 import sharp from "sharp";
 import type { JimpRead } from "types/Jimp";
 import { GifCombiner, jimpGuardType } from "./GifCombiner";
+import { getEffectsDir } from "lib/files/useLocation";
 
-const ASSETS_DIR = "assets/effects";
 const BASE_MAX_RES = { height: 800, width: 800 };
 const maxResTotal = BASE_MAX_RES.height * BASE_MAX_RES.width;
 
@@ -16,8 +16,7 @@ export async function combineRandomEffect(
   sourceImg: Buffer | JimpRead | Gif,
   scaleInitImage: boolean,
 ): Promise<Buffer> {
-  const mainPath = path.resolve(`${__dirname}/../`);
-  const dir = path.join(mainPath, ASSETS_DIR);
+  const dir = getEffectsDir()
   const ls = await fs.readdir(dir);
 
   const effectGifs = ls.filter((el) => el.endsWith(".gif"));

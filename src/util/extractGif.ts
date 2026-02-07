@@ -50,13 +50,11 @@ export async function extractImage(message: OmitPartialGroupDMChannel<Message<bo
       const filename = path.join(storageLoc, resultName)
 
       await fs.writeFile(filename, localBuffer)
-      buffer = await GifUtil.read(resultName)
+      buffer = await GifUtil.read(filename)
     } else {
       buffer = localBuffer
     }
-
   }
-
   return buffer
 }
 

@@ -1,0 +1,58 @@
+// Require the necessary discord.js classes
+import { Client } from "discord.js";
+import fs from "fs/promises"
+import path from "path";
+import { updateChannelMessages } from "./util/messageFetch";
+import { logger } from "./logger";
+import { generateAndSave } from "../lib/markov/markov";
+
+const watchedChannels: Set<string> = new Set()
+
+export async function getMessagesChannels() {
+  const projectRoot = process.cwd();
+  const messagesPath = path.join(projectRoot, "assets", "messages")
+
+  const messageFiles = await fs.readdir(messagesPath)
+  const jsonFiles = messageFiles.filter(el => el.endsWith('.json'))
+  const channelFiles = jsonFiles.map(el => {
+    const filePath = path.join(messagesPath, el)
+    const id = el.split('.').at(0) ?? ""
+    return {
+      id: id,
+      path: filePath
+    }
+  })
+
+  return channelFiles
+}
+
+export async function updateAllChannelMessages(client: Client<boolean>) {
+  const channelFiles = await getMessagesChannels()
+
+  for (const channel of channelFiles) {
+    // TODO: some sleep here 
+    const channelLogger = logger.child({ channel: channel })
+    const start = performance.now()
+
+    channelLogger.info("Starting saving channel msgs and parsing markov")
+    const [success, messages] = await updateChannelMessages(client, channel.id, channelLogger)
+    if (success) {
+      const messageAsText = messages.map(el => el.content)
+      await generateAndSave(messageAsText, channel.id)
+    }
+    channelLogger.info({ duration: performance.now() - start, wasFetchSuccess: success }, "Ended saving channel msgs and parsing markov")
+  }
+}
+
+export async function updateWatchedChannels(): Promise<void> {
+  const channels = await getMessagesChannels()
+
+  const channelsIds = channels.map(el => el.path.split('.')[0] ?? 'INVALID')
+
+  for (const channel of channelsIds) {
+    const hasVal = watchedChannels.has(channel)
+    if (!hasVal) {
+      watchedChannels.add(channel)
+    }
+  }
+}

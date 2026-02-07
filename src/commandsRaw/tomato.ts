@@ -24,12 +24,11 @@ export async function tomato(message: OmitPartialGroupDMChannel<Message<boolean>
     return
   }
 
-  if (amount < -2) {
+  if (amount <= -1) {
     await message.reply(`Uuugh i'd like to throw ${amount} tomatoes please, grab em from the negativity of space`)
     clearInterval(interval)
     return
   }
-
 
   try {
     const imagePath = await extractImagePathName(message)

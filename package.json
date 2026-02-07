@@ -10,7 +10,8 @@
     "cli": "bun src/cli.ts",
     "fetch": "bun scripts/fetchGifs.ts",
     "typecheck": "tsc --noEmit",
-    "benchmark": "bun scripts/benchmark.ts"
+    "benchmark": "bun scripts/benchmark.ts",
+    "test": "vitest"
   },
   "devDependencies": {
     "@types/bun": "latest",

@@ -19,3 +19,26 @@ export function getStorageLocation(): string {
 export function getTransformedLocation(): string {
   return path.join(getStorageLocation(), "transformed")
 }
+
+export function getRootDir(): string {
+  console.log(__dirname)
+  return path.resolve(`${__dirname}/../../`);
+}
+
+export function getRandomDir(): string {
+  const RANDOM_DIR = "assets/randomizer";
+  const dir = path.join(getRootDir(), RANDOM_DIR);
+  return dir
+}
+
+export function getEffectsDir(): string {
+  const EFFECTS_DIR = "assets/effects";
+  const dir = path.join(getRootDir(), EFFECTS_DIR);
+  return dir
+}
+
+export function getTomatoDir(): string {
+  const TOMATO_DIR = "assets/tomato";
+  const dir = path.join(getRootDir(), TOMATO_DIR);
+  return dir
+}
