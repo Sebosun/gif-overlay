@@ -4,7 +4,8 @@ import { rawCommandsManager } from "./commandsRaw/rawCommandsManager";
 import { interactionManager } from "./commands/handleManager";
 import { logger } from "./logger";
 import { ensureUploadFoldersExist } from "lib/files/ensureFoldersExist";
-import { updateAllChannelMessages, updateWatchedChannels } from "./updateChannels";
+import { updateChannelsGenerateMarkov, updateWatchedChannels } from "./updateChannels";
+import { handleMessageQueue } from "./util/handleMessagesQueue";
 
 async function onInit(client: Client<boolean>): Promise<void> {
   logger.info({
@@ -12,18 +13,18 @@ async function onInit(client: Client<boolean>): Promise<void> {
     uid: client.user?.id,
     guildCount: client.guilds.cache.size
   }, 'Bot is ready and online');
-  if (process.env.NODE_ENV !== "production") {
-    return
-  }
+  // if (process.env.NODE_ENV !== "production") {
+  //   return
+  // }
   const ONE_MINUTE = 1000 * 60
   const ONE_HOUR = ONE_MINUTE * 60
 
   updateWatchedChannels()
-  updateAllChannelMessages(client)
+  updateChannelsGenerateMarkov(client)
 
   setInterval(() => {
     try {
-      updateAllChannelMessages(client)
+      updateChannelsGenerateMarkov(client)
       updateWatchedChannels()
     } catch (e) {
       console.error(e)
@@ -35,7 +36,7 @@ async function onInit(client: Client<boolean>): Promise<void> {
 async function main() {
   await ensureUploadFoldersExist()
   const token = process.env.TOKEN;
-  // Create a new client instance
+
   const client = new Client({
     intents: [
       GatewayIntentBits.Guilds,
@@ -50,6 +51,7 @@ async function main() {
 
   client.on(Events.MessageCreate, (message) => {
     rawCommandsManager(message, client)
+    handleMessageQueue(message, client, logger)
   });
 
   client.on(Events.InteractionCreate, interactionManager);

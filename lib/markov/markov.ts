@@ -220,7 +220,7 @@ export const getSavePath = (channelId: string, count: number) => {
   return path.join(projectRoot, "assets", "markov", fileName)
 }
 
-export async function generateAndSave(text: string[], channelId: string): Promise<void> {
+export async function generateSaveMarkov(text: string[], channelId: string): Promise<void> {
   const sanitized = prepareTexts(text)
 
   const ngramsOne = constructMarkovRefactor(sanitized, 1)

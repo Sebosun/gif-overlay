@@ -1,126 +1,16 @@
-import { ChannelType, Message, type Client, type FetchMessagesOptions } from "discord.js";
-import path from "path"
+import { ChannelType, type Client, type FetchMessagesOptions } from "discord.js";
 import fs from "fs/promises"
 import type pino from "pino";
+import { constructMessage } from "../helpers/constructMessage";
+import type { ParsedSavedMessage } from "types/Messages";
+import { getChannelPath } from "@/helpers/messages";
 
-export interface ParsedSavedMessage {
-  author: string
-  content: string
-  id: string
-  timeStamp: string
-}
+const MAX_MESSAGES = 100
+const LIMIT_PER_REQUEST = 100
 
-export const getChannelPath = (channelId: string) => {
-  const projectRoot = process.cwd();
-  return path.join(projectRoot, "assets", "messages", channelId + ".json")
-}
 
-// no extra chceks, these are done 
-export async function getMessagesNoChecks(client: Client<boolean>, channelId: string): Promise<[boolean, ParsedSavedMessage[]]> {
-  const [exists, messages] = await getSavedMessages(channelId)
-  const channel = await client.channels.fetch(channelId)
 
-  if (!channel) {
-    return [false, []]
-  }
-
-  if (!channel || channel.type !== ChannelType.GuildText) {
-    return [false, []]
-  }
-
-  if (!exists) {
-    try {
-      const messages = await messageFetch(client, channelId)
-      return [true, messages]
-    } catch (e) {
-      console.error(e)
-      return [false, []]
-    }
-  }
-
-  return [true, messages]
-}
-
-// Additional chceks on init
-export async function updateChannelMessages(client: Client<boolean>, channelId: string, logger: pino.Logger): Promise<[boolean, ParsedSavedMessage[]]> {
-  const [exists, messages] = await getSavedMessages(channelId)
-  const channel = await client.channels.fetch(channelId)
-
-  if (!channel) {
-    return [false, []]
-  }
-
-  if (!channel || channel.type !== ChannelType.GuildText) {
-    return [false, []]
-  }
-
-  if (!exists) {
-    try {
-      logger.info("Channel doesnt exist, fetching")
-      const messages = await messageFetch(client, channelId, logger)
-      return [true, messages]
-    } catch (e) {
-      logger.info({ err: e }, "error fetching channel")
-      return [false, []]
-    }
-  }
-
-  const latestSavedMessage = messages[0] as ParsedSavedMessage | undefined
-
-  // get just the latest message
-  const options: FetchMessagesOptions = { limit: 1 };
-
-  const fetchedMsg = await channel.messages.fetch(options);
-  if (fetchedMsg.size === 0) {
-    return [false, []]
-  }
-
-  const latestFetchedMsg = fetchedMsg.first() as Message
-  const isSameLastMsg = latestFetchedMsg.id === latestSavedMessage?.id
-
-  if (isSameLastMsg) {
-    return [true, messages]
-  }
-
-  const latestSavedMsgTime = new Date(Number(latestSavedMessage?.timeStamp))
-
-  // check if last message saved was within last 4 hours
-  const difference = latestFetchedMsg.createdAt.getTime() - latestSavedMsgTime.getTime()
-
-  const REFRESH_HOURS = 1000 * 60 * 60 * 4
-  if (REFRESH_HOURS >= difference) {
-    return [true, messages]
-  }
-
-  try {
-    logger.info("Channel is outdated, fetching")
-    const messages = await messageFetch(client, channelId, logger)
-    return [true, messages]
-  } catch (e) {
-    logger.info({ err: e }, "Error fetching channel")
-    return [false, []]
-  }
-}
-
-export async function getSavedMessages(channelId: string): Promise<[boolean, ParsedSavedMessage[]]> {
-  const savePath = getChannelPath(channelId)
-
-  try {
-    const exists = await fs.exists(savePath)
-    if (!exists) {
-      return [false, []]
-    }
-
-    const res = await fs.readFile(savePath, 'utf8')
-    const messages = JSON.parse(res) as ParsedSavedMessage[]
-    return [true, messages]
-  } catch (e) {
-    console.error("Path might not exist", e)
-    return [false, []]
-  }
-}
-
-async function messageFetch(client: Client<boolean>, channelId: string, logger?: pino.Logger): Promise<ParsedSavedMessage[]> {
+export async function messageFetch(client: Client<boolean>, channelId: string, logger?: pino.Logger): Promise<ParsedSavedMessage[]> {
   let allMessages = [] as ParsedSavedMessage[];
   let lastMessageId: string | undefined;
 
@@ -130,10 +20,8 @@ async function messageFetch(client: Client<boolean>, channelId: string, logger?:
     throw new Error("Channel does not exist or is not a text channel")
   }
 
-  const MAX_MESSAGES = 25_000
-
   while (allMessages.length < MAX_MESSAGES) {
-    const options: FetchMessagesOptions = { limit: 100 }; // Max 100 per request
+    const options: FetchMessagesOptions = { limit: LIMIT_PER_REQUEST };
     if (lastMessageId) {
       options.before = lastMessageId;
     }
@@ -142,18 +30,10 @@ async function messageFetch(client: Client<boolean>, channelId: string, logger?:
 
     logger?.info({ curLen: allMessages.length, lastId: options.before }, "Fetched messages")
 
-    if (messages.size === 0) break; // No more messages
-
+    if (messages.size === 0) break;
 
     const messagesWithoutBot = messages.filter(el => el.author.id !== client.user?.id)
-    const messagesNew = messagesWithoutBot.map(el => {
-      return {
-        author: el.author.id,
-        content: el.content,
-        id: el.id,
-        timeStamp: `${el.createdAt.getTime()}`
-      } as ParsedSavedMessage
-    })
+    const messagesNew = messagesWithoutBot.map(constructMessage)
 
     allMessages = [...allMessages, ...messagesNew]
     lastMessageId = messages.last()?.id;
@@ -166,4 +46,3 @@ async function messageFetch(client: Client<boolean>, channelId: string, logger?:
 
   return allMessages
 }
-
