@@ -4,11 +4,11 @@ import {
   type OmitPartialGroupDMChannel,
 } from "discord.js";
 import { constructMessage } from "../helpers/constructMessage";
-import { watchedChannels } from "@/updateChannels";
 import type pino from "pino";
 import type { ParsedSavedMessage } from "types/Messages";
 import { getChannelPath, getSavedMessages } from "@/helpers/messages";
 import fs from "fs/promises";
+import { watchedChannels } from "@/channels/watchChannels";
 
 interface QueueRecord {
   isBeingSaved: boolean;
@@ -19,7 +19,7 @@ type Queue = Record<string, QueueRecord>;
 
 const queue = {} as Queue;
 
-const MESSAGES_BEFORE_SAVE = 10;
+const MESSAGES_BEFORE_SAVE = 2;
 
 export async function handleMessageQueue(
   message: OmitPartialGroupDMChannel<Message<boolean>>,
@@ -39,8 +39,6 @@ export async function handleMessageQueue(
     queue[channelId] = { isBeingSaved: false, items: [] };
   }
 
-  logger.info({ channelId: channelId }, "Saving a sent message");
-
   const curQueue = queue[channelId];
 
   const msg = constructMessage(message);
@@ -57,7 +55,7 @@ export async function handleMessageQueue(
   const savePath = getChannelPath(channelId);
   const [exists, messages] = await getSavedMessages(channelId);
   if (!exists) {
-    const errMsg = "Messages file does exist, even though it should";
+    const errMsg = "Messages file doesn't exist, even though it should";
     logger.error({ channelId: channelId }, errMsg);
     throw new Error(errMsg);
   }
@@ -65,7 +63,7 @@ export async function handleMessageQueue(
   const msgToAppend = curQueue.items;
   curQueue.items = [];
 
-  const joined = messages.splice(0, 0, ...msgToAppend.reverse());
+  const joined = [...msgToAppend.reverse(), ...messages]
 
   await fs.writeFile(savePath, JSON.stringify(joined));
   curQueue.isBeingSaved = false;
