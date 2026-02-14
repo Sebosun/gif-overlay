@@ -15,10 +15,11 @@ export async function markov(message: OmitPartialGroupDMChannel<Message<boolean>
   }
 
   if (!watchChannelsManager.isWatched(channelId)) {
+    await message.reply("Generatemaxxing rn, doing my stuff on that grind fr fr no cap")
     const [watchError] = await watchChannelsManager.watch({ id: channelId, client, logger })
     if (watchError) {
       logger.error({ err: watchError }, "Failed to fetch channel messages")
-      await message.reply("i am broken miserable man, i have nothing left to live for. i broke and the light is on only by chance")
+      await message.reply("I lied I'm not doing anything, I lied to you once more. I deserve death")
       return
     }
   }
