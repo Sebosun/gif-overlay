@@ -1,5 +1,7 @@
 import path from "path"
 import fs from "fs/promises"
+import type { FlatCatch } from "types/Common"
+import { restoreStringifiedMap, stringifyMap } from "lib/stringifyMap"
 
 const stripRegex = /[$&+,;=?#|'^*()%")(\n]/g
 
@@ -11,29 +13,9 @@ const sanitize = (text?: string) => {
   return text.toLowerCase().replace(stripRegex, "")
 }
 
-function replacer(key: string, value: Map<string, number>) {
-  if (value instanceof Map) {
-    return {
-      dataType: 'Map',
-      value: Array.from(value.entries()),
-    };
-  } else {
-    return value;
-  }
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function reviver(key: unknown, value: any) {
-  if (typeof value === 'object' && value !== null && value.dataType === 'Map') {
-    return new Map(value.value);
-  }
-  return value;
-}
-
 const constructMarkovRefactor = (texts: string[], ngrams: number = 2): MarkovChain => {
   const markovChain = new Map() as MarkovChain
 
-  console.time("One message")
   for (const text of texts) {
     const split = text.split(" ")
     for (let i = 0; i < split.length; i++) {
@@ -98,6 +80,7 @@ export function prepareTexts(text: string[]): string[] {
 
 export async function generateMarkovRefactor(channelId: string, firstMsg?: string) {
   // TODO: additional chceks dawg
+  // ... ciekawe co autor mial na mysli tutaj bo juz nie pamietam
   const savePathOne = getSavePath(channelId, 1)
   const savePathTwo = getSavePath(channelId, 2)
   const savePathThree = getSavePath(channelId, 3)
@@ -106,9 +89,9 @@ export async function generateMarkovRefactor(channelId: string, firstMsg?: strin
   const ngramsTwoText = await fs.readFile(savePathTwo, 'utf8')
   const ngramsThreeText = await fs.readFile(savePathThree, 'utf8')
 
-  const ngramsOne = JSON.parse(ngramsOneText, reviver) as MarkovChain
-  const ngramsTwo = JSON.parse(ngramsTwoText, reviver) as MarkovChain
-  const ngramsThree = JSON.parse(ngramsThreeText, reviver) as MarkovChain
+  const ngramsOne = restoreStringifiedMap(ngramsOneText) as MarkovChain
+  const ngramsTwo = restoreStringifiedMap(ngramsTwoText) as MarkovChain
+  const ngramsThree = restoreStringifiedMap(ngramsThreeText) as MarkovChain
 
   const countScores = (word: string) => {
     const res = ngramsOne.get(word)
@@ -220,7 +203,7 @@ export const getSavePath = (channelId: string, count: number) => {
   return path.join(projectRoot, "assets", "markov", fileName)
 }
 
-export async function generateSaveMarkov(text: string[], channelId: string): Promise<void> {
+export async function generateSaveMarkov(text: string[], channelId: string): Promise<FlatCatch> {
   const sanitized = prepareTexts(text)
 
   const ngramsOne = constructMarkovRefactor(sanitized, 1)
@@ -231,7 +214,16 @@ export async function generateSaveMarkov(text: string[], channelId: string): Pro
   const savePathTwo = getSavePath(channelId, 2)
   const savePathThree = getSavePath(channelId, 3)
 
-  await fs.writeFile(savePathOne, JSON.stringify(ngramsOne, replacer))
-  await fs.writeFile(savePathTwo, JSON.stringify(ngramsTwo, replacer))
-  await fs.writeFile(savePathThree, JSON.stringify(ngramsThree, replacer))
+  try {
+    await fs.writeFile(savePathOne, stringifyMap(ngramsOne))
+    await fs.writeFile(savePathTwo, stringifyMap(ngramsTwo))
+    await fs.writeFile(savePathThree, stringifyMap(ngramsThree))
+    return [undefined, undefined]
+  } catch (e) {
+    if (e instanceof Error) {
+      return [e, undefined]
+    }
+    return [new Error("Something went wrong during file save"), undefined]
+  }
+
 }

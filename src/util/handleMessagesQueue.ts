@@ -8,7 +8,8 @@ import type pino from "pino";
 import type { ParsedSavedMessage } from "types/Messages";
 import { getChannelPath, getSavedMessages } from "@/helpers/messages";
 import fs from "fs/promises";
-import { watchedChannels } from "@/channels/watchChannels";
+import { watchChannelsManager } from "@/channels/watchChannels";
+import { flatCall, type FlatPromise } from "types/Common";
 
 interface QueueRecord {
   isBeingSaved: boolean;
@@ -21,18 +22,15 @@ const queue = {} as Queue;
 
 const MESSAGES_BEFORE_SAVE = 2;
 
-export async function handleMessageQueue(
-  message: OmitPartialGroupDMChannel<Message<boolean>>,
-  client: Client<boolean>,
-  logger: pino.Logger,
-): Promise<void> {
+export async function handleMessageQueue(message: OmitPartialGroupDMChannel<Message<boolean>>, client: Client<boolean>, logger: pino.Logger): FlatPromise {
   const channelId = message.channelId;
 
   if (client.user?.id === message.author.id) {
-    return;
+    return [undefined, undefined];
   }
-  if (!watchedChannels.has(channelId)) {
-    return;
+
+  if (!watchChannelsManager.isWatched(channelId)) {
+    return [undefined, undefined];
   }
 
   if (!queue[channelId]) {
@@ -47,17 +45,17 @@ export async function handleMessageQueue(
   logger.info({ channelId: channelId }, "Appended message to the queue");
 
   if (curQueue.items.length < MESSAGES_BEFORE_SAVE || curQueue.isBeingSaved) {
-    return;
+    return [undefined, undefined];
   }
 
   curQueue.isBeingSaved = true;
 
   const savePath = getChannelPath(channelId);
-  const [exists, messages] = await getSavedMessages(channelId);
-  if (!exists) {
-    const errMsg = "Messages file doesn't exist, even though it should";
-    logger.error({ channelId: channelId }, errMsg);
-    throw new Error(errMsg);
+  const [error, messages] = await getSavedMessages(channelId);
+  if (error) {
+    curQueue.isBeingSaved = false;
+    logger.error({ channelId: channelId }, "Messages file doesn't exist, even though it should");
+    return [error, undefined];
   }
 
   const msgToAppend = curQueue.items;
@@ -65,10 +63,18 @@ export async function handleMessageQueue(
 
   const joined = [...msgToAppend.reverse(), ...messages]
 
-  await fs.writeFile(savePath, JSON.stringify(joined));
+  const [writeError] = await flatCall(() => fs.writeFile(savePath, JSON.stringify(joined)));
   curQueue.isBeingSaved = false;
+
+  if (writeError) {
+    logger.error({ channelId, err: writeError }, "Failed to flush queue to file");
+    return [writeError, undefined];
+  }
+
   logger.info(
     { channelId, count: msgToAppend.length },
     "Flushed queue to file",
   );
+
+  return [undefined, undefined];
 }

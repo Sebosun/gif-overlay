@@ -1,9 +1,10 @@
-import { getSavedMessages, type ParsedSavedMessage } from "../src/util/messageFetch";
+import { getSavedMessages } from "@/helpers/messages"
+import type { ParsedSavedMessage } from "types/Messages"
 
-const [success, messages] = await getSavedMessages('1104469255262580748')
+const [error, messages] = await getSavedMessages('1104469255262580748')
 
-if (!success) {
-  throw new Error("no sucess no bueno")
+if (error) {
+  throw error
 }
 
 // const messageAsText = messages.map(el => el.content)
@@ -41,11 +42,3 @@ for (let i = 0; i < messages.length; i++) {
   acc.push(cur.content + content.join(" "))
   // const peek = messages[i + 1]
 }
-
-console.log(acc.length)
-console.log(messages.map(el => el.content).length)
-
-// console.log(prepareTexts(messageAsText))
-
-// console.log(await generateMarkovRefactor('1104469255262580748', "cat is cute"))
-// console.timeEnd("Markov")

@@ -2,14 +2,12 @@ import { ChannelType, type Client, type FetchMessagesOptions } from "discord.js"
 import type pino from "pino";
 import { constructMessage } from "../helpers/constructMessage";
 import type { ParsedSavedMessage } from "types/Messages";
+import type { FlatCatch } from "types/Common";
 
 const MAX_MESSAGES = 100
 const LIMIT_PER_REQUEST = 100
 
-// TODO: extract this into generic type
-type FetchResult = [success: boolean, result: ParsedSavedMessage[]]
-
-export async function fetchChannelMessages(client: Client<boolean>, channelId: string, logger?: pino.Logger): Promise<FetchResult> {
+export async function fetchChannelMessages(client: Client<boolean>, channelId: string, logger?: pino.Logger): Promise<FlatCatch<ParsedSavedMessage[]>> {
   let allMessages = [] as ParsedSavedMessage[];
   let lastMessageId: string | undefined;
 
@@ -17,7 +15,7 @@ export async function fetchChannelMessages(client: Client<boolean>, channelId: s
 
   if (!channel || channel.type !== ChannelType.GuildText) {
     logger?.error({ channelId }, "Channel does not exist or is not a text channel")
-    return [false, []]
+    return [new Error("Channel does not exist or is not a text channel"), undefined]
   }
 
   // TODO: try catch on these fetches lol
@@ -39,11 +37,9 @@ export async function fetchChannelMessages(client: Client<boolean>, channelId: s
     allMessages = [...allMessages, ...messagesNew]
     lastMessageId = messages.last()?.id;
 
-    if (messages.size < 100) break; // Reached end of available messages
+    // Reached end of available messages
+    if (messages.size < 100) break;
   }
 
-  // const savePath = getChannelPath(channelId)
-  // await fs.writeFile(savePath, JSON.stringify(allMessages))
-
-  return [true, allMessages]
+  return [undefined, allMessages]
 }

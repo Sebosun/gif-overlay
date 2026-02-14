@@ -1,9 +1,12 @@
+import fs from "fs/promises"
 import { fetchChannelMessages } from "@/util/messageFetch";
 import { updateSavedMarkovs } from "./updateChannels";
 import { getChannelPath, getMessagesFilePaths } from "@/helpers/messages";
+import { generateSaveMarkov } from "lib/markov/markov";
+import { flatCall, type FlatCatch, type FlatPromise } from "types/Common";
 import type pino from "pino";
 import type { Client } from "discord.js";
-import fs from "fs/promises"
+import { setErrorTimeout } from "./setErrorTimeout";
 
 interface WatchChannelOpts {
   id: string
@@ -13,6 +16,7 @@ interface WatchChannelOpts {
 
 // watched channel is created whenever a .markov command is used in some particular channel
 const watchedChannels: Set<string> = new Set()
+const watchInProgress: Map<string, Promise<FlatCatch>> = new Map()
 
 function getAll(): string[] {
   return watchedChannels.values().toArray()
@@ -22,25 +26,53 @@ function isWatched(id: string): boolean {
   return watchedChannels.has(id)
 }
 
-async function watch(opts: WatchChannelOpts): Promise<boolean> {
+async function watch(opts: WatchChannelOpts): FlatPromise {
   const { id, client, logger } = opts
-  if (isWatched(id)) return false
 
-  const [success, messages] = await fetchChannelMessages(client, id, logger)
-  if (!success) return false
+  const pendingProgress = watchInProgress.get(id)
+  if (pendingProgress) {
+    const timeout = setErrorTimeout()
+    const result = await Promise.race([pendingProgress, timeout.promise])
 
-  const savePath = getChannelPath(id)
-  // Wrap into a function that returns [success, messages] array
-  await fs.writeFile(savePath, JSON.stringify(messages))
-  // TODO: WIP come back here immediatelly
+    timeout.clear()
+    return result
+  }
 
-  watchedChannels.add(id)
+  if (isWatched(id)) {
+    return [new Error("Channel is already being watched"), undefined]
+  }
 
-  return true
+  const doWatch = async (): FlatPromise => {
+    const [fetchError, fetchValue] = await fetchChannelMessages(client, id, logger)
+
+    if (fetchError) return [fetchError, undefined]
+
+    const savePath = getChannelPath(id)
+    const [error] = await flatCall(() => fs.writeFile(savePath, JSON.stringify(fetchValue)))
+
+    if (error) return [error, undefined]
+
+    const textContent = fetchValue.map(el => el.content)
+    const [generateError] = await generateSaveMarkov(textContent, id)
+
+    if (generateError) return [generateError, undefined]
+
+    watchedChannels.add(id)
+    return [undefined, undefined]
+  }
+
+  const pending = doWatch().finally(() => watchInProgress.delete(id))
+  watchInProgress.set(id, pending)
+
+  return pending
 }
 
-async function updateChannels(): Promise<void> {
-  const channels = await getMessagesFilePaths()
+async function updateChannels(): FlatPromise {
+  const [error, channels] = await getMessagesFilePaths()
+
+  if (error) {
+    return [error, undefined]
+  }
 
   for (const channel of channels) {
     const hasVal = watchedChannels.has(channel.id)
@@ -48,9 +80,11 @@ async function updateChannels(): Promise<void> {
       watchedChannels.add(channel.id)
     }
   }
+
+  return [undefined, undefined]
 }
 
-function initObserver(): void {
+async function initObserver(): Promise<void> {
   if (process.env.NODE_ENV !== "production") {
     return
   }
@@ -58,16 +92,18 @@ function initObserver(): void {
   const ONE_MINUTE = 1000 * 60
   const ONE_HOUR = ONE_MINUTE * 60
 
-  updateChannels()
-  updateSavedMarkovs()
+  const [error] = await updateChannels()
 
-  setInterval(() => {
-    try {
-      updateSavedMarkovs()
-      updateChannels()
-    } catch (e) {
-      console.error(e)
+  if (!error) {
+    updateSavedMarkovs()
+  }
+
+  setInterval(async () => {
+    const [error] = await updateChannels()
+    if (!error) {
+      await updateSavedMarkovs()
     }
+
   }, ONE_HOUR)
 }
 
