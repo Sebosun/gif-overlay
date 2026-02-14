@@ -1,5 +1,5 @@
+import type { ParsedSavedMessage } from "@/types/Messages"
 import type { Message } from "discord.js"
-import type { ParsedSavedMessage } from "types/Messages"
 
 export function constructMessage(msg: Message<boolean>): ParsedSavedMessage {
   return {

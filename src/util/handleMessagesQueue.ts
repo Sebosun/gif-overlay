@@ -5,11 +5,11 @@ import {
 } from "discord.js";
 import { constructMessage } from "../helpers/constructMessage";
 import type pino from "pino";
-import type { ParsedSavedMessage } from "types/Messages";
 import { getChannelPath, getSavedMessages } from "@/helpers/messages";
 import fs from "fs/promises";
 import { watchChannelsManager } from "@/channels/watchChannels";
-import { flatCall, type FlatPromise } from "types/Common";
+import { type FlatPromise, flatCall } from "@/types/Common";
+import type { ParsedSavedMessage } from "@/types/Messages";
 
 interface QueueRecord {
   isBeingSaved: boolean;
@@ -19,8 +19,8 @@ interface QueueRecord {
 type Queue = Record<string, QueueRecord>;
 
 const queue = {} as Queue;
-
 const MESSAGES_BEFORE_SAVE = 2;
+
 
 export async function handleMessageQueue(message: OmitPartialGroupDMChannel<Message<boolean>>, client: Client<boolean>, logger: pino.Logger): FlatPromise {
   const channelId = message.channelId;
@@ -38,7 +38,6 @@ export async function handleMessageQueue(message: OmitPartialGroupDMChannel<Mess
   }
 
   const curQueue = queue[channelId];
-
   const msg = constructMessage(message);
   curQueue.items.push(msg);
 
@@ -77,4 +76,9 @@ export async function handleMessageQueue(message: OmitPartialGroupDMChannel<Mess
   );
 
   return [undefined, undefined];
+}
+
+
+export const messageQueue = {
+  handleMessageQueue
 }

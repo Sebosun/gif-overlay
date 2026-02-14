@@ -1,12 +1,8 @@
 import fs from "fs/promises";
 import { fetch, sleep } from "bun";
 import path from "path";
-import type {
-  DownloadImage,
-  FetchResult,
-  RunnerOpts,
-} from "../types/RunnerTypes";
 import { splitImageToGif } from "./splitImageToGif";
+import type { DownloadImage, FetchResult, RunnerOpts } from "@/types/RunnerTypes";
 
 async function downloadImage(opts: DownloadImage) {
   const { isGif, imageUrl, width, height, saveName } = opts;

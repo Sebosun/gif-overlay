@@ -1,4 +1,4 @@
-import type { FlatPromise, FlatCatch } from "types/Common";
+import type { FlatCatch, FlatPromise } from "@/types/Common";
 
 const WATCH_TIMEOUT_MS = 1000 * 60 * 5 // 5 minutes
 

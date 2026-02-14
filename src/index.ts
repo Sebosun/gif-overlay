@@ -3,7 +3,7 @@ import { Client, Events, GatewayIntentBits } from "discord.js";
 import { rawCommandsManager } from "./commandsRaw/rawCommandsManager";
 import { interactionManager } from "./commands/handleManager";
 import { logger } from "./logger";
-import { ensureUploadFoldersExist } from "lib/files/ensureFoldersExist";
+import { ensureUploadFoldersExist } from "@/lib/files/ensureFoldersExist";
 import { handleMessageQueue } from "./util/handleMessagesQueue";
 import { watchChannelsManager } from "./channels/watchChannels";
 

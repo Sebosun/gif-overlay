@@ -1,4 +1,4 @@
-import { randomNumberInterval } from "lib/randomNumberInterval"
+import { randomNumberInterval } from "@/lib/randomNumberInterval"
 
 interface CommandBuilder {
   background: string, overlay: string, resultPath: string, amount: number
@@ -48,7 +48,7 @@ export function commandBuilder(options: CommandBuilder) {
 
     inputs.push(`-i ${ov}`)
 
-    // Rant but apparently when you provide [0][ref] to scale, it takes the second 
+    // Rant but apparently when you provide [0][ref] to scale, it takes the second
     // input as reference, not a thing you apply on
     // Imagine spending like 2 hours finding out why
     // dar = display ratio (selected gif); oh = output height; rh = reference height

@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import fs from "fs/promises"
-import { getEffectsDir, getRandomDir, getRootDir, getStorageLocation, getTomatoDir, getTransformedLocation } from '../lib/files/useLocation'
+import { getEffectsDir, getRandomDir, getRootDir, getStorageLocation, getTomatoDir, getTransformedLocation } from '../src/lib/files/useLocation'
 
 // More of a sanity check than anything
 // Since paths are relative and systme dependent it'd be hard to otherwise test them

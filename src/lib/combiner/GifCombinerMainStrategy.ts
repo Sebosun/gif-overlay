@@ -2,11 +2,11 @@ import { Jimp, type Bitmap } from "jimp";
 import { GifFrame, GifCodec, Gif, GifUtil } from "gifwrap";
 import sharp from "sharp";
 import type { GifStrategy } from "./GifCombiner";
-import type { JimpRead } from "types/Jimp";
-import type { Placement } from "lib/combiner/placement";
-import { createCompositeJimp } from "lib/combiner/createComposite";
-import { getPositionsPredictable, getPositionsRandomized, getRandomPosition, type Positions } from "lib/combiner/positions";
+import type { Placement } from "@/lib/combiner/placement";
+import { createCompositeJimp } from "@/lib/combiner/createComposite";
+import { getPositionsPredictable, getPositionsRandomized, getRandomPosition, type Positions } from "@/lib/combiner/positions";
 import { getRatio } from "./ratio";
+import type { JimpRead } from "@/types/Jimp";
 
 interface MainStrategyOpts {
   gifPrimary: Gif | JimpRead;

@@ -4,9 +4,9 @@ import path from "path";
 import { Jimp } from "jimp";
 import { getRatio } from "./ratio";
 import sharp from "sharp";
-import type { JimpRead } from "types/Jimp";
 import { GifCombiner, jimpGuardType } from "./GifCombiner";
-import { getEffectsDir } from "lib/files/useLocation";
+import { getEffectsDir } from "@/lib/files/useLocation";
+import type { JimpRead } from "@/types/Jimp";
 
 const BASE_MAX_RES = { height: 800, width: 800 };
 const maxResTotal = BASE_MAX_RES.height * BASE_MAX_RES.width;

@@ -1,7 +1,7 @@
 import { exit } from "node:process";
 import { parseArgs } from "node:util";
 import fs from "fs/promises";
-import { ffmpegCombineTomato } from "lib/ffmpeg/combineTomato";
+import { ffmpegCombineTomato } from "@/lib/ffmpeg/combineTomato";
 
 async function cli() {
   const { positionals } = parseArgs({

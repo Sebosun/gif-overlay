@@ -1,8 +1,8 @@
 // Require the necessary discord.js classes
-import { generateSaveMarkov } from "lib/markov/markov";
+import { generateSaveMarkov } from "@/lib/markov/markov";
 import { logger } from "@/logger";
 import { getMessagesFilePaths, getSavedMessages, type MessageFile } from "@/helpers/messages";
-import type { FlatPromise } from "types/Common";
+import type { FlatPromise } from "@/types/Common";
 
 async function updateMarkovByChannelId(channel: MessageFile): FlatPromise {
   const channelLogger = logger.child({ channel: channel })

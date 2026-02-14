@@ -1,7 +1,7 @@
 import path from "path"
-import type { ParsedSavedMessage } from "types/Messages";
 import fs from "fs/promises"
-import type { FlatPromise } from "types/Common";
+import type { FlatPromise } from "@/types/Common"
+import type { ParsedSavedMessage } from "@/types/Messages"
 
 export interface MessageFile {
   id: string

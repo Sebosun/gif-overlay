@@ -1,8 +1,8 @@
 import { ChannelType, type Client, type FetchMessagesOptions } from "discord.js";
 import type pino from "pino";
 import { constructMessage } from "../helpers/constructMessage";
-import type { ParsedSavedMessage } from "types/Messages";
-import type { FlatCatch } from "types/Common";
+import type { FlatCatch } from "@/types/Common";
+import type { ParsedSavedMessage } from "@/types/Messages";
 
 const MAX_MESSAGES = 100
 const LIMIT_PER_REQUEST = 100

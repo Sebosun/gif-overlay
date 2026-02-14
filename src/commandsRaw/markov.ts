@@ -1,6 +1,6 @@
 import type { Client, Message, OmitPartialGroupDMChannel } from "discord.js"
 import type pino from "pino"
-import { generateMarkovRefactor } from "../../lib/markov/markov"
+import { generateMarkovRefactor } from "../lib/markov/markov"
 import { watchChannelsManager } from "../channels/watchChannels"
 
 export async function markov(message: OmitPartialGroupDMChannel<Message<boolean>>, client: Client<boolean>, logger: pino.Logger): Promise<void> {

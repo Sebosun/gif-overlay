@@ -1,7 +1,7 @@
 import path from "path"
 import fs from "fs/promises"
-import type { FlatCatch } from "types/Common"
-import { restoreStringifiedMap, stringifyMap } from "lib/stringifyMap"
+import { restoreStringifiedMap, stringifyMap } from "@/lib/stringifyMap"
+import type { FlatCatch } from "@/types/Common"
 
 const stripRegex = /[$&+,;=?#|'^*()%")(\n]/g
 

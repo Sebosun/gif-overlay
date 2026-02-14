@@ -3,7 +3,7 @@ import { getUrl } from "../util/getUrl"
 import fs from 'fs/promises'
 import { Gif, GifUtil } from "gifwrap"
 import { mp4ToGif } from "./mp4ToGif"
-import { getStorageLocation } from "lib/files/useLocation"
+import { getStorageLocation } from "@/lib/files/useLocation"
 import path from "path"
 
 const EXTRACT_GIF_ERRORS = {

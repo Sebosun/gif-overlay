@@ -1,9 +1,9 @@
-import { createCompositeJimp } from "lib/combiner/createComposite";
-import type { Placement } from "lib/combiner/placement";
-import { type Positions, getPositionsRandomized, getPositionsPredictable, getRandomPosition } from "lib/combiner/positions";
-import type { JimpRead } from "types/Jimp";
+import { createCompositeJimp } from "@/lib/combiner/createComposite";
+import type { Placement } from "@/lib/combiner/placement";
+import { type Positions, getPositionsRandomized, getPositionsPredictable, getRandomPosition } from "@/lib/combiner/positions";
 import type { GifStrategy } from "./GifCombiner";
 import { getRatio } from "./ratio";
+import type { JimpRead } from "@/types/Jimp";
 
 export interface TwoImagesStategyOpts {
   firstImage: JimpRead;

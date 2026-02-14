@@ -4,16 +4,16 @@ import path from "path";
 import { Jimp } from "jimp";
 import { getRatio } from "./ratio";
 import sharp from "sharp";
-import type { JimpRead } from "types/Jimp";
 import { GifCombiner, jimpGuardType } from "./GifCombiner";
 import { type Placement, RandomPlacement } from "./placement";
-import { getEffectsDir, getRandomDir, getTomatoDir } from "lib/files/useLocation";
+import { getEffectsDir, getRandomDir, getTomatoDir } from "@/lib/files/useLocation";
+import type { JimpRead } from "@/types/Jimp";
 
 const BASE_MAX_RES = { height: 600, width: 600 };
 const maxResTotal = BASE_MAX_RES.height * BASE_MAX_RES.width;
 
 // If it breaks here idc because the bot wont even start
-export async function combineRandomImagesFactory(sourceImg: Buffer | JimpRead | Gif, scaleInitImage: boolean, isRandom: boolean,): Promise<Buffer> {
+export async function combineRandomImagesFactory(sourceImg: Buffer | JimpRead | Gif, scaleInitImage: boolean, isRandom: boolean): Promise<Buffer> {
   const randomGifs = [] as string[];
 
   const dir = getRandomDir()

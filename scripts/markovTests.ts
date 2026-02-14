@@ -1,5 +1,5 @@
 import { getSavedMessages } from "@/helpers/messages"
-import type { ParsedSavedMessage } from "types/Messages"
+import type { ParsedSavedMessage } from "@/types/Messages"
 
 const [error, messages] = await getSavedMessages('1104469255262580748')
 
