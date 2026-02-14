@@ -10,6 +10,7 @@ import fs from "fs/promises";
 import { watchChannelsManager } from "@/channels/watchChannels";
 import { type FlatPromise, flatCall } from "@/types/Common";
 import type { ParsedSavedMessage } from "@/types/Messages";
+import { config } from "@/config"
 
 interface QueueRecord {
   isBeingSaved: boolean;
@@ -19,7 +20,7 @@ interface QueueRecord {
 type Queue = Record<string, QueueRecord>;
 
 const queue = {} as Queue;
-const MESSAGES_BEFORE_SAVE = 2;
+const MESSAGES_BEFORE_SAVE = config.messagesBeforeSaveThreshold;
 
 
 export async function handleMessageQueue(message: OmitPartialGroupDMChannel<Message<boolean>>, client: Client<boolean>, logger: pino.Logger): FlatPromise {

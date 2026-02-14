@@ -1,9 +1,10 @@
 import pino from "pino"
+import { config } from "@/config"
 
 export const logger = pino({
-  level: process.env.LOG_LEVEL || 'info',
+  level: process.env.LOG_LEVEL || config.defaultLogLevel,
 
-  redact: ['req.headers.authorization', 'user.password', 'email'],
+  redact: [...config.logRedactedFields],
 
   // Use a custom serializer for Errors to ensure stack traces appear cleanly
   serializers: {

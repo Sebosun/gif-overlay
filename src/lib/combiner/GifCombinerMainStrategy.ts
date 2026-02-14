@@ -7,6 +7,7 @@ import { createCompositeJimp } from "@/lib/combiner/createComposite";
 import { getPositionsPredictable, getPositionsRandomized, getRandomPosition, type Positions } from "@/lib/combiner/positions";
 import { getRatio } from "./ratio";
 import type { JimpRead } from "@/types/Jimp";
+import { config } from "@/config"
 
 interface MainStrategyOpts {
   gifPrimary: Gif | JimpRead;
@@ -133,7 +134,7 @@ export class GifCombinerMainStrategy implements GifStrategy {
     }
 
     if (!delay) {
-      delay = 10;
+      delay = config.defaultFrameDelayCentisecs;
     }
 
     return [baseBitmap, overlayBitmap, delay];
@@ -150,8 +151,8 @@ export class GifCombinerMainStrategy implements GifStrategy {
 
     const processed = await sharp(buffer)
       .png({
-        colors: 256,
-        dither: 1,
+        colors: config.pngColorCount,
+        dither: config.pngDitherLevel,
       })
       .toBuffer();
 
@@ -179,7 +180,7 @@ export class GifCombinerMainStrategy implements GifStrategy {
 
     // likely rethink this, penalization for not having transparent frames should happen
     // but this might be wrong place for it
-    const finalRatio = this.isOverlayTransparent ? this.ratio : 0.1
+    const finalRatio = this.isOverlayTransparent ? this.ratio : config.nonTransparentOverlayRatio
 
     const scale = getRatio({
       baseElem: this.baseImage,
@@ -231,10 +232,10 @@ export class GifCombinerMainStrategy implements GifStrategy {
     const framesAcc = await this.loopAndCombine();
 
     if (!this.useSharp) {
-      GifUtil.quantizeDekker(framesAcc, 256); // quantize the image
+      GifUtil.quantizeDekker(framesAcc, config.gifQuantizeColors); // quantize the image
     }
 
-    const encodedGif = await codec.encodeGif(framesAcc, { loops: 0 });
+    const encodedGif = await codec.encodeGif(framesAcc, { loops: config.gifLoopCount });
     return encodedGif;
   }
 }

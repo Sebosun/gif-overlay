@@ -7,6 +7,7 @@ import type pino from "pino";
 import type { Client } from "discord.js";
 import { setErrorTimeout } from "./setErrorTimeout";
 import { type FlatCatch, type FlatPromise, flatCall } from "@/types/Common";
+import { config } from "@/config"
 
 interface WatchChannelOpts {
   id: string
@@ -89,8 +90,7 @@ async function initObserver(): Promise<void> {
     return
   }
 
-  const ONE_MINUTE = 1000 * 60
-  const ONE_HOUR = ONE_MINUTE * 60
+  const ONE_HOUR = config.markovUpdateIntervalMs
 
   const [error] = await updateChannels()
 

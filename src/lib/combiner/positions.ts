@@ -1,5 +1,6 @@
 import type { Placement } from "./placement";
 import { randomNumberInterval } from "../randomNumberInterval";
+import { config } from "@/config"
 
 interface Sizes {
   width: number;
@@ -62,7 +63,7 @@ export function getPositionsPredictable(options: PositionOptions): Positions {
 
   if (placement === "tomato") {
     const x = (base.width / 2) - (overlay.width / 2)
-    const y = (base.height / 3) - (overlay.height / 2)
+    const y = (base.height / config.tomatoYPositionDivisor) - (overlay.height / 2)
     return {
       x: x,
       y: y,
@@ -80,7 +81,7 @@ export function getPositionsPredictable(options: PositionOptions): Positions {
 
 export function getPositionsRandomized(
   options: PositionOptions,
-  overflowPercent: number = 0.3 // Allow 30% overflow by default
+  overflowPercent: number = config.defaultPositionOverflowPercent
 ): Positions {
   const { base, overlay, placement } = options;
 
@@ -150,8 +151,8 @@ export function getPositionsRandomized(
   // Is this hardcoded? Yes.
   // Do i care? No
   if (placement === "tomato") {
-    const randX = randomNumberInterval(-200, 40);
-    const randY = randomNumberInterval(-150, -50);
+    const randX = randomNumberInterval(config.tomatoRandomXMin, config.tomatoRandomXMax);
+    const randY = randomNumberInterval(config.tomatoRandomYMin, config.tomatoRandomYMax);
 
     return {
       x: randX,

@@ -1,4 +1,5 @@
 import cp from "child_process"
+import { config } from "@/config"
 
 export const execWithTimeout = (command: string): Promise<void> => {
   return new Promise((resolve, reject) => {
@@ -18,13 +19,13 @@ export const execWithTimeout = (command: string): Promise<void> => {
     interval = setInterval(() => {
       const curTime = new Date();
       // Likely shouldn't run for more than minutes, even on raspberry pi
-      if (Number(curTime) - Number(startTime) > 1000 * 60 * 5) {
+      if (Number(curTime) - Number(startTime) > config.commandTimeoutMs) {
         clearInterval(interval);
         if (!proc.exitCode) {
           proc.kill();
         }
         reject(new Error("Command ran for too long"));
       }
-    }, 1000 * 60);
+    }, config.commandCheckIntervalMs);
   });
 };

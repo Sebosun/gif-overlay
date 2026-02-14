@@ -1,4 +1,5 @@
 import { randomNumberInterval } from "@/lib/randomNumberInterval"
+import { config } from "@/config"
 
 interface CommandBuilder {
   background: string, overlay: string, resultPath: string, amount: number
@@ -6,8 +7,8 @@ interface CommandBuilder {
 
 export function getCentering() {
   let center = ``
-  const randomX = randomNumberInterval(-200, 200)
-  const randomY = randomNumberInterval(-50, 600)
+  const randomX = randomNumberInterval(config.ffmpegCenterRandomXMin, config.ffmpegCenterRandomXMax)
+  const randomY = randomNumberInterval(config.ffmpegCenterRandomYMin, config.ffmpegCenterRandomYMax)
   // const center = `x=(W-w)-${randomX}/2:y=(H-h)-${randomY}/2`
 
   if (randomX >= 0) {
@@ -71,7 +72,7 @@ export function commandBuilder(options: CommandBuilder) {
   const confirmReplace = "-y"
 
   if (!bg.endsWith('.gif')) {
-    const loop = "-loop 1"
+    const loop = `-loop ${config.ffmpegBgLoopCount}`
     collector.push(loop)
   }
 
@@ -84,5 +85,5 @@ export function commandBuilder(options: CommandBuilder) {
 }
 
 export const optimizeCommand = (input: string, output: string) => {
-  return `ffmpeg -y -i ${input} -vf "scale=300:-1:flags=lanczos,fps=10" -loop 0 ${output}`
+  return `ffmpeg -y -i ${input} -vf "scale=${config.ffmpegOptimizeScaleWidth}:-1:flags=lanczos,fps=${config.ffmpegOptimizeFps}" -loop ${config.ffmpegOptimizeLoopCount} ${output}`
 }

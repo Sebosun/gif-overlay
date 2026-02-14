@@ -3,9 +3,10 @@ import type pino from "pino";
 import { constructMessage } from "../helpers/constructMessage";
 import type { FlatCatch } from "@/types/Common";
 import type { ParsedSavedMessage } from "@/types/Messages";
+import { config } from "@/config"
 
-const MAX_MESSAGES = 100
-const LIMIT_PER_REQUEST = 100
+const MAX_MESSAGES = config.maxMessagesToFetch
+const LIMIT_PER_REQUEST = config.messagesPerRequestLimit
 
 export async function fetchChannelMessages(client: Client<boolean>, channelId: string, logger?: pino.Logger): Promise<FlatCatch<ParsedSavedMessage[]>> {
   let allMessages = [] as ParsedSavedMessage[];
@@ -38,7 +39,7 @@ export async function fetchChannelMessages(client: Client<boolean>, channelId: s
     lastMessageId = messages.last()?.id;
 
     // Reached end of available messages
-    if (messages.size < 100) break;
+    if (messages.size < LIMIT_PER_REQUEST) break;
   }
 
   return [undefined, allMessages]

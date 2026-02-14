@@ -3,6 +3,7 @@ import { GifCombinerTwoImagesStrategy } from "./GifCombinerTwoImagesStrategy";
 import { GifCombinerMainStrategy } from "./GifCombinerMainStrategy";
 import type { Placement } from "./placement";
 import type { JimpRead } from "../../types/Jimp";
+import { config } from "@/config"
 
 export interface GifStrategy {
   run(): Promise<JimpRead | Gif>;
@@ -34,7 +35,7 @@ export class GifCombiner {
 
   aggregateImage!: Gif | JimpRead;
   elementImage!: Gif | JimpRead;
-  ratio: number = 0.25
+  ratio: number = config.defaultOverlayRatio
 
   constructor(options: CombinerOpts) {
     this.base = options.base;

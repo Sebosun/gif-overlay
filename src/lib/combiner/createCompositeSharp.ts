@@ -5,6 +5,7 @@ import { getRatio } from "./ratio";
 import sharp from "sharp";
 import { getPositionsPredictable } from "./positions";
 import type { JimpRead } from "@/types/Jimp";
+import { config } from "@/config"
 
 async function ensureRGBA(bitmap: JimpBitmap) {
   const jimp = new Jimp(bitmap);
@@ -68,7 +69,7 @@ export async function createCompositeSharp(
         left: y,
       },
     ])
-    .png({ colors: 256 })
+    .png({ colors: config.pngColorCount })
     .toBuffer();
 
   const jimpImage = await Jimp.read(result);

@@ -2,6 +2,7 @@ import path from "path"
 import fs from "fs/promises"
 import { restoreStringifiedMap, stringifyMap } from "@/lib/stringifyMap"
 import type { FlatCatch } from "@/types/Common"
+import { config } from "@/config"
 
 const stripRegex = /[$&+,;=?#|'^*()%")(\n]/g
 
@@ -13,7 +14,7 @@ const sanitize = (text?: string) => {
   return text.toLowerCase().replace(stripRegex, "")
 }
 
-const constructMarkovRefactor = (texts: string[], ngrams: number = 2): MarkovChain => {
+const constructMarkovRefactor = (texts: string[], ngrams: number = config.markovDefaultNgrams): MarkovChain => {
   const markovChain = new Map() as MarkovChain
 
   for (const text of texts) {
@@ -158,7 +159,7 @@ export async function generateMarkovRefactor(channelId: string, firstMsg?: strin
       next = arr[randomKeyIdx]
     }
 
-    while (next !== undefined && result.length <= 10) {
+    while (next !== undefined && result.length <= config.markovMaxResultLength) {
       result.push(next);
 
       const nextKey = next.split(" ").at(-1) // in two words, gets the last part
@@ -185,9 +186,9 @@ export async function generateMarkovRefactor(channelId: string, firstMsg?: strin
   let result = generate(firstMsg?.toLocaleLowerCase())
 
   let attempts = 0
-  while (result.split(" ").length <= 5 && attempts <= 8) {
+  while (result.split(" ").length <= config.markovMinWordCount && attempts <= config.markovMaxAttempts) {
     attempts++
-    if (attempts < 5) {
+    if (attempts < config.markovSeedAttemptThreshold) {
       result = generate(firstMsg?.toLocaleLowerCase())
     } else {
       result = generate()

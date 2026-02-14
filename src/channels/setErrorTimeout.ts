@@ -1,6 +1,7 @@
 import type { FlatCatch, FlatPromise } from "@/types/Common";
+import { config } from "@/config"
 
-const WATCH_TIMEOUT_MS = 1000 * 60 * 5 // 5 minutes
+const WATCH_TIMEOUT_MS = config.watchTimeoutMs
 
 export function setErrorTimeout() {
   let timer: NodeJS.Timeout

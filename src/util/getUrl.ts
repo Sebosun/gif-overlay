@@ -1,4 +1,5 @@
 import { ComponentType, Embed, type Message } from "discord.js"
+import { config } from "@/config"
 
 export function getUrlFromComponent(message: Message<boolean>): string {
   let url = ""
@@ -35,7 +36,7 @@ export function getUrlFromEmbed(embeds: Embed[]): string {
 export async function getUrl(message: Message<boolean>): Promise<string> {
   let url = message.attachments.at(0)?.url ?? ""
   if (!url) {
-    const options = { limit: 50 };
+    const options = { limit: config.messageSearchLimit };
     const fetched = await message.channel.messages.fetch(options);
     for (const [, channelMsg] of fetched) {
       const attach = channelMsg.attachments.first()?.proxyURL

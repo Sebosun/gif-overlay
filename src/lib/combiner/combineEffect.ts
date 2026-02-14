@@ -7,8 +7,9 @@ import sharp from "sharp";
 import { GifCombiner, jimpGuardType } from "./GifCombiner";
 import { getEffectsDir } from "@/lib/files/useLocation";
 import type { JimpRead } from "@/types/Jimp";
+import { config } from "@/config"
 
-const BASE_MAX_RES = { height: 800, width: 800 };
+const BASE_MAX_RES = config.effectMaxResolution;
 const maxResTotal = BASE_MAX_RES.height * BASE_MAX_RES.width;
 
 // This needs to be rafctored into a generic function
@@ -32,8 +33,8 @@ export async function combineRandomEffect(
   if (sourceImg instanceof Buffer) {
     const process = await sharp(sourceImg)
       .png({
-        colors: 256,
-        dither: 1,
+        colors: config.pngColorCount,
+        dither: config.pngDitherLevel,
       })
       .toBuffer();
 
@@ -60,7 +61,7 @@ export async function combineRandomEffect(
     overlay: firstGif,
     placement: 'center',
     randomizePositions: false,
-    ratio: 1.5
+    ratio: config.effectOverlayRatio
   });
 
   const gif = await combiner.run();

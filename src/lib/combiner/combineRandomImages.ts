@@ -8,8 +8,9 @@ import { GifCombiner, jimpGuardType } from "./GifCombiner";
 import { type Placement, RandomPlacement } from "./placement";
 import { getEffectsDir, getRandomDir, getTomatoDir } from "@/lib/files/useLocation";
 import type { JimpRead } from "@/types/Jimp";
+import { config } from "@/config"
 
-const BASE_MAX_RES = { height: 600, width: 600 };
+const BASE_MAX_RES = config.randomImageMaxResolution;
 const maxResTotal = BASE_MAX_RES.height * BASE_MAX_RES.width;
 
 // If it breaks here idc because the bot wont even start
@@ -66,7 +67,7 @@ export async function combineWithTomato(sourceImg: Buffer | JimpRead | Gif, scal
   if (!randomGif) {
     throw new Error("Missing gif")
   }
-  const result = await combineRandomImages({ sourceImg, scaleInitImage, randomizePositions, gifsToCombine: [gifPath], placement: "tomato", ratio: 1.5 })
+  const result = await combineRandomImages({ sourceImg, scaleInitImage, randomizePositions, gifsToCombine: [gifPath], placement: "tomato", ratio: config.tomatoOverlayRatio })
 
   return result
 }
@@ -90,8 +91,8 @@ export async function combineRandomImages(opts: CombineOptions): Promise<Buffer>
     // jimp had some issues with reading some png files, so using sharp for that now and slowly realizing that jimp aint it chef
     const process = await sharp(sourceImg)
       .png({
-        colors: 256,
-        dither: 1,
+        colors: config.pngColorCount,
+        dither: config.pngDitherLevel,
       })
       .toBuffer();
 

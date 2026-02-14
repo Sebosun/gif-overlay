@@ -1,12 +1,14 @@
 import { extractImagePathName } from "@/util/extractGif"
-import type { Message, OmitPartialGroupDMChannel } from "discord.js"
+import type { Client, Message, OmitPartialGroupDMChannel } from "discord.js"
 import { ffmpegCombineTomato } from "@/lib/ffmpeg/combineTomato"
 import { cleanupFiles } from "@/lib/files/cleanupFiles"
+import type pino from "pino"
+import { config } from "@/config"
 
-export async function tomato(message: OmitPartialGroupDMChannel<Message<boolean>>): Promise<void> {
+export async function tomato(message: OmitPartialGroupDMChannel<Message<boolean>>, _: Client<boolean>, logger: pino.Logger): Promise<void> {
   const interval = setInterval(async () => {
     await message.channel.sendTyping()
-  }, 1000 * 10)
+  }, config.typingIndicatorIntervalMs)
 
   const msg = message.content.split(" ")
 
@@ -18,20 +20,27 @@ export async function tomato(message: OmitPartialGroupDMChannel<Message<boolean>
     }
   }
 
-  if (amount > 50) {
+  if (amount > config.maxTomatoAmount) {
     await message.reply("Try a lower number bozo don't explode my pc")
     clearInterval(interval)
     return
   }
 
-  if (amount <= -1) {
+  if (amount <= config.minTomatoAmount) {
     await message.reply(`Uuugh i'd like to throw ${amount} tomatoes please, grab em from the negativity of space`)
     clearInterval(interval)
     return
   }
 
   try {
-    const imagePath = await extractImagePathName(message)
+    const [err, imagePath] = await extractImagePathName(message)
+
+    if (err) {
+      await message.reply("This aint if chef, I'm too weak for this one.")
+      logger.error(err)
+      return
+    }
+
     await message.channel.sendTyping()
 
     const [unopt, opt] = await ffmpegCombineTomato(imagePath, amount)
@@ -44,8 +53,10 @@ export async function tomato(message: OmitPartialGroupDMChannel<Message<boolean>
     cleanupFiles(opt)
     cleanupFiles(imagePath)
   } catch (e) {
+    if (e instanceof Error) {
+      logger.error(e.message)
+    }
     await message.reply("This aint if chef, I'm too weak for this one.")
-    console.error("Something went wrong...", e);
   } finally {
     clearInterval(interval)
   }

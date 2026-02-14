@@ -1,3 +1,5 @@
+import { config } from "@/config"
+
 interface RatioDuck {
   height: number;
   width: number;
@@ -12,7 +14,7 @@ interface RatioOptions {
 export const getRatio = (options: RatioOptions): number => {
   const { baseElem, overlayElem, ratio } = options;
 
-  let maxRatio = 0.25;
+  let maxRatio: number = config.defaultOverlayRatio;
 
   if (ratio) {
     maxRatio = ratio
