@@ -30,4 +30,6 @@ export interface RunnerOpts {
   start: number;
   end: number;
   tag: string;
+  onProgress?: (amountDownloaded: number) => void
+  onEnd?: () => void
 }

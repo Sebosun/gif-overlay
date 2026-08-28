@@ -4,12 +4,7 @@ import path from "path";
 import { splitImageToGif } from "./splitImageToGif";
 import type { DownloadImage, FetchResult, RunnerOpts } from "@/types/RunnerTypes";
 
-interface Tags {
-  name: string;
-  tagAPIName: string;
-}
-
-export const GOOD_TAGS: Tags[] = [
+export const GOOD_TAGS = [
   { name: "Best Rated", tagAPIName: "__all__" },
   { name: "Good morning", tagAPIName: "good morning" },
   { name: "Anime", tagAPIName: "anime" },
@@ -69,8 +64,8 @@ async function fetchGifs(url: string, saveDir: string) {
   }
 }
 
-async function runRunner(opts: RunnerOpts) {
-  const { start, end, tag, saveDir } = opts;
+export async function runGifsFetch(opts: RunnerOpts) {
+  const { start, end, tag, saveDir, onEnd, onProgress } = opts;
 
   const exists = await fs.exists(saveDir);
   if (!exists) {
@@ -78,20 +73,22 @@ async function runRunner(opts: RunnerOpts) {
   }
 
   for (let i = start; i < end; i++) {
-    const iter = 18 * i;
+    const iter = 18 * i; // hardcoded to be 18 per page iirc
     const url = `https://www.picmix.com/maker/get-stamps?tag=${tag}&offset=${iter}`; // shamelessly stealing cool gifs from picmix
-    console.log("Generating url, with iteration ", i, " Total: ", iter);
+    // console.log("Generating url, with iteration ", i, " Total: ", iter);
 
     await fetchGifs(url, saveDir);
     const sleepTime = Math.floor(Math.random() * 1000);
     await sleep(sleepTime);
+
+    if (onProgress) {
+      onProgress(i);
+    }
+  }
+
+  if (onEnd) {
+    onEnd();
   }
 }
-const opts = {
-  saveDir: "./assets/kawaii/",
-  start: 10,
-  end: 50,
-  tag: GOOD_TAGS[0]?.name
-};
 
 // runRunner(opts);
