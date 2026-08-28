@@ -1,13 +1,13 @@
-import fs from "fs/promises"
-import { fetchChannelMessages } from "@/util/messageFetch";
-import { updateSavedMarkovs } from "./updateChannels";
+import { config } from "@/config";
 import { getChannelPath, getMessagesFilePaths } from "@/helpers/messages";
 import { generateSaveMarkov } from "@/lib/markov/markov";
-import type pino from "pino";
-import type { Client } from "discord.js";
-import { setErrorTimeout } from "./setErrorTimeout";
 import { type FlatCatch, type FlatPromise, flatCall } from "@/types/Common";
-import { config } from "@/config"
+import { fetchChannelMessages } from "@/util/messageFetch";
+import type { Client } from "discord.js";
+import fs from "fs/promises";
+import type pino from "pino";
+import { setErrorTimeout } from "./setErrorTimeout";
+import { updateSavedMarkovs } from "./updateChannels";
 
 interface WatchChannelOpts {
   id: string

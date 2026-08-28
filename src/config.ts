@@ -10,9 +10,9 @@ export const config = {
 
   // Message Fetching
   messageSearchLimit: 50,
-  maxMessagesToFetch: 100,
+  maxMessagesToFetch: 5000,
   messagesPerRequestLimit: 100,
-  messagesBeforeSaveThreshold: 2,
+  messagesBeforeSaveThreshold: 100,
 
   // Image Processing - Resolution
   effectMaxResolution: { height: 800, width: 800 },
@@ -58,7 +58,7 @@ export const config = {
   minTomatoAmount: -1,
 
   // Boomerify
-  boomerifyEffectChanceMax: 2,
+  boomerifyEffectChanceMax: 3,
 
   // Markov Chain
   markovDefaultNgrams: 2,

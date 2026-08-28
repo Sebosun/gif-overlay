@@ -21,7 +21,6 @@ export function getTransformedLocation(): string {
 }
 
 export function getRootDir(): string {
-  console.log(__dirname)
   return path.resolve(`${__dirname}/../../`);
 }
 

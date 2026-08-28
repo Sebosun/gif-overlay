@@ -4,27 +4,32 @@ import { pomusz } from "./pomusz";
 import { effect } from "./effect";
 import { markov } from "./markov";
 import { logger } from "../logger";
-import type pino from "pino";
 import { tomato } from "./tomato";
+import type pino from "pino";
 
-export type ManualCommand = (message: OmitPartialGroupDMChannel<Message<boolean>>, client: Client<boolean>, logger: pino.Logger) => Promise<void>
-export type Commands = "boomerify" | "pomusz" | "effect" | "markov" | "tomato"
+export type ManualCommand = (
+  message: OmitPartialGroupDMChannel<Message<boolean>>,
+  client: Client<boolean>,
+  logger: pino.Logger,
+) => Promise<void>;
+
+export type Commands = "boomerify" | "pomusz" | "effect" | "markov" | "tomato";
 
 export interface CommandDetails {
-  description: string
-  exec: ManualCommand
-  name: Commands
-  triggers: string[]
+  description: string;
+  exec: ManualCommand;
+  name: Commands;
+  triggers: string[];
 }
 
-export const MODIFIER = "."
+export const MODIFIER = ".";
 
-export const manCommandsRefact: Record<Commands, CommandDetails> = {
+export const manualCommands: Record<Commands, CommandDetails> = {
   boomerify: {
     name: "boomerify",
     description: `boomerify an image. Use .boomerr for more random placements`,
     exec: boomerify,
-    triggers: ["boomer", "bomer", "boomerr"]
+    triggers: ["boomer", "bomer", "boomerr"],
   },
   pomusz: {
     name: "pomusz",
@@ -50,14 +55,17 @@ export const manCommandsRefact: Record<Commands, CommandDetails> = {
     exec: tomato,
     triggers: ["tomato", "tomato [amount]"],
   },
-} as const
+} as const;
 
-
-export async function rawCommandsManager(message: OmitPartialGroupDMChannel<Message<boolean>>, client: Client<boolean>): Promise<void> {
+export async function rawCommandsManager(
+  message: OmitPartialGroupDMChannel<Message<boolean>>,
+  client: Client<boolean>,
+): Promise<void> {
   // Our bot own message
   if (client.user?.id === message.author.id) {
     return;
   }
+
   const commandLogger = logger.child({
     interactionId: message.id,
     guildId: message.guildId,
@@ -66,23 +74,30 @@ export async function rawCommandsManager(message: OmitPartialGroupDMChannel<Mess
     userName: message.author.username,
   });
 
-  const userMsg = message.content
+  const userMsg = message.content;
 
-  const keys = Object.keys(manCommandsRefact) as Commands[]
+  const keys = Object.keys(manualCommands) as Commands[];
+
+  // Kinda don't like the way this is handled
   for (const key of keys) {
-    const command = manCommandsRefact[key]
-    const isCurrentCommand = command.triggers.some(el => userMsg.startsWith(`${MODIFIER}${el}`))
-    if (isCurrentCommand) {
-      const specificLogger = commandLogger.child({ command: key })
+    const command = manualCommands[key];
+
+    const isCurrentCommand = command.triggers.some((el) => userMsg.startsWith(`${MODIFIER}${el}`));
+
+    if (!isCurrentCommand) {
+      const curCommandLogger = commandLogger.child({ command: key });
+
       try {
         const start = performance.now();
-        specificLogger.info("Launching command")
-        await command.exec(message, client, specificLogger)
-        specificLogger.info({ duration: performance.now() - start }, "Finished command")
+        curCommandLogger.info("Launching command");
+
+        await command.exec(message, client, curCommandLogger);
+
+        curCommandLogger.info({ duration: performance.now() - start }, "Finished command");
       } catch (e) {
-        specificLogger.error({ err: e }, 'Command execution failed')
+        curCommandLogger.error({ err: e }, "Command execution failed");
       }
-      break
+      break;
     }
   }
 }

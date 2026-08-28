@@ -7,7 +7,6 @@ export type FlatCatch<T = void> =
 
 export type FlatPromise<T = void> = Promise<FlatCatch<T>>
 
-
 // This needs a better place, for now its here
 export async function flatCall(cb: () => Promise<unknown>): Promise<FlatCatch> {
   try {
