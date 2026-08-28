@@ -12,6 +12,10 @@ async function ensureUserFolderExists(location: string): Promise<void> {
   }
 }
 
+/**
+ * Making sure that storage folders exists.
+ * These are used for storing user data, markov chains etc.
+ */
 export async function ensureUploadFoldersExist(): Promise<void> {
   const imageUploadLocation = getStorageLocation()
   const transformedLoc = getTransformedLocation()

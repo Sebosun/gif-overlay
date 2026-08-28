@@ -78,13 +78,12 @@ export async function rawCommandsManager(
 
   const keys = Object.keys(manualCommands) as Commands[];
 
-  // Kinda don't like the way this is handled
   for (const key of keys) {
     const command = manualCommands[key];
 
     const isCurrentCommand = command.triggers.some((el) => userMsg.startsWith(`${MODIFIER}${el}`));
 
-    if (!isCurrentCommand) {
+    if (isCurrentCommand) {
       const curCommandLogger = commandLogger.child({ command: key });
 
       try {
@@ -94,6 +93,7 @@ export async function rawCommandsManager(
         await command.exec(message, client, curCommandLogger);
 
         curCommandLogger.info({ duration: performance.now() - start }, "Finished command");
+
       } catch (e) {
         curCommandLogger.error({ err: e }, "Command execution failed");
       }

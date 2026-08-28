@@ -4,7 +4,6 @@ import { homedir } from "os";
 const home = homedir()
 
 // TODO: customizing the path
-
 const FOLDER_NAME = "gif-overlay"
 
 // Hoonestly, this is not ideal

@@ -22,8 +22,7 @@ type Queue = Record<string, QueueRecord>;
 const queue = {} as Queue;
 const MESSAGES_BEFORE_SAVE = config.messagesBeforeSaveThreshold;
 
-
-export async function handleMessageQueue(message: OmitPartialGroupDMChannel<Message<boolean>>, client: Client<boolean>, logger: pino.Logger): FlatPromise {
+async function handleMessageQueue(message: OmitPartialGroupDMChannel<Message<boolean>>, client: Client<boolean>, logger: pino.Logger): FlatPromise {
   const channelId = message.channelId;
 
   if (client.user?.id === message.author.id) {
