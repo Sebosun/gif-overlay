@@ -15,13 +15,12 @@ export function stringifyMap(v: Map<unknown, unknown>): string {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function reviver(key: unknown, value: any) {
+function reviver(_: unknown, value: any) {
   if (typeof value === 'object' && value !== null && value.dataType === 'Map') {
     return new Map(value.value);
   }
   return value;
 }
-
 
 export function restoreStringifiedMap(j: string): Map<unknown, unknown> {
   return JSON.parse(j, reviver)

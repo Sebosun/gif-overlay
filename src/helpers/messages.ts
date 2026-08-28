@@ -8,11 +8,19 @@ export interface MessageFile {
   path: string
 }
 
+/**
+ * Builds the path for a channel's persisted message history JSON file.
+ */
 export const getChannelPath = (channelId: string) => {
   const projectRoot = process.cwd();
   return path.join(projectRoot, "assets", "messages", channelId + ".json")
 }
 
+/**
+ * Lists persisted channel message files as channel IDs and absolute paths.
+ *
+ * @returns A flat result containing matching JSON files or the directory-read error.
+ */
 export async function getMessagesFilePaths(): FlatPromise<MessageFile[]> {
   const projectRoot = process.cwd();
   const messagesPath = path.join(projectRoot, "assets", "messages")
@@ -38,6 +46,9 @@ export async function getMessagesFilePaths(): FlatPromise<MessageFile[]> {
   }
 }
 
+/**
+ * Checks whether a channel has a persisted message history file.
+ */
 export async function isChannelSaved(channelId: string): Promise<boolean> {
   const savePath = getChannelPath(channelId)
   try {
@@ -47,6 +58,11 @@ export async function isChannelSaved(channelId: string): Promise<boolean> {
   }
 }
 
+/**
+ * Reads a channel's persisted messages.
+ *
+ * @returns A flat result containing messages; missing or unreadable files return an empty list.
+ */
 export async function getSavedMessages(channelId: string): FlatPromise<ParsedSavedMessage[]> {
   const savePath = getChannelPath(channelId)
 
