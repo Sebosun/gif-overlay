@@ -3,12 +3,10 @@ import { Client, Events, GatewayIntentBits } from "discord.js";
 import { rawCommandsManager } from "./commandsRaw/rawCommandsManager";
 import { interactionManager } from "./commands/handleManager";
 import { logger } from "./logger";
-import { ensureUploadFoldersExist } from "@/lib/files/ensureFoldersExist";
 import { messageQueue } from "./util/handleMessagesQueue";
 import { watchChannelsManager } from "./channels/watchChannels";
 
 export async function startDiscordServer() {
-  await ensureUploadFoldersExist()
   const token = process.env.TOKEN;
 
   const client = new Client({

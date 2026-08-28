@@ -4,6 +4,18 @@ import path from "path";
 import { splitImageToGif } from "./splitImageToGif";
 import type { DownloadImage, FetchResult, RunnerOpts } from "@/types/RunnerTypes";
 
+interface Tags {
+  name: string;
+  tagAPIName: string;
+}
+
+export const GOOD_TAGS: Tags[] = [
+  { name: "Best Rated", tagAPIName: "__all__" },
+  { name: "Good morning", tagAPIName: "good morning" },
+  { name: "Anime", tagAPIName: "anime" },
+  { name: "Kawaii", tagAPIName: "kawaii" },
+] as const;
+
 async function downloadImage(opts: DownloadImage) {
   const { isGif, imageUrl, width, height, saveName } = opts;
 
@@ -75,19 +87,11 @@ async function runRunner(opts: RunnerOpts) {
     await sleep(sleepTime);
   }
 }
-
-const GOOD_TAGS = {
-  best_rated: "_all_",
-  morning: "good morning",
-  anime: "anime",
-  kawaii: "kawaii",
-} as const;
-
 const opts = {
   saveDir: "./assets/kawaii/",
   start: 10,
   end: 50,
-  tag: GOOD_TAGS.kawaii,
+  tag: GOOD_TAGS[0]?.name
 };
 
-runRunner(opts);
+// runRunner(opts);

@@ -1,7 +1,11 @@
+import { ensureUploadFoldersExist } from "@/lib/files/ensureFoldersExist";
 import { parseArgs } from "util";
 import { startDiscordServer } from "./server";
+import { launchCLI } from "./cli/ink";
 
-function main() {
+async function main() {
+  await ensureUploadFoldersExist()
+
   const { positionals } = parseArgs({
     args: Bun.argv,
     strict: true,
@@ -15,7 +19,8 @@ function main() {
       startDiscordServer();
       break;
     case "cli":
-      break;
+      launchCLI();
+      break
     default:
       console.log("Arguments not passed. Cannot start");
       break;
