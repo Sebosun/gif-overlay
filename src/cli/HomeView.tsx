@@ -119,14 +119,23 @@ export function HomeView({ onNavigate }: Props) {
       <Text> </Text>
       <Text bold>Actions</Text>
 
-      {actions.map((action, index) => (
-        <Text
-          key={action.name}
-          color={action.name === "Create tomato GIF" && !tomatoExists ? "yellow" : (selectedAction === index ? "green" : undefined)}
-        >
-          {selectedAction === index ? ">" : " "} {action.name}{action.name === "Create tomato GIF" && !tomatoExists ? " (missing)" : ""}
-        </Text>
-      ))}
+      {actions.map((action, index) => {
+        const isTomatoAction = action.name === "Create tomato GIF";
+        const tomatoStatus = tomatoExists ? "installed" : "missing";
+        let color: "green" | "yellow" | undefined;
+
+        if (isTomatoAction) {
+          color = tomatoExists ? "green" : "yellow";
+        } else if (selectedAction === index) {
+          color = "green";
+        }
+
+        return (
+          <Text key={action.name} color={color}>
+            {selectedAction === index ? ">" : " "} {action.name}{isTomatoAction ? ` (${tomatoStatus})` : ""}
+          </Text>
+        );
+      })}
 
       <Text> </Text>
 

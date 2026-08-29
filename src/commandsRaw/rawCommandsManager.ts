@@ -27,6 +27,8 @@ export interface CommandDetails {
 
 export const MODIFIER = ".";
 
+// TODO: Fix boomerify
+// TODO: Fix effect
 export const manualCommands: Record<Commands, CommandDetails> = {
   boomerify: {
     name: "boomerify",
