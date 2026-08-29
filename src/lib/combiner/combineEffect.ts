@@ -5,7 +5,7 @@ import { Jimp } from "jimp";
 import { getRatio } from "./ratio";
 import sharp from "sharp";
 import { GifCombiner, jimpGuardType } from "./GifCombiner";
-import { getEffectsDir } from "@/lib/files/useLocation";
+import { getAssetsDir } from "@/lib/files/useLocation";
 import type { JimpRead } from "@/types/Jimp";
 import { config } from "@/config"
 
@@ -17,8 +17,18 @@ export async function combineRandomEffect(
   sourceImg: Buffer | JimpRead | Gif,
   scaleInitImage: boolean,
 ): Promise<Buffer> {
-  const dir = getEffectsDir()
-  const ls = await fs.readdir(dir);
+  const dir = getAssetsDir();
+  const entries = await fs.readdir(dir, { withFileTypes: true });
+  const folders = entries
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => path.join(dir, entry.name));
+  const randomFolder = folders[Math.floor(Math.random() * folders.length)];
+
+  if (!randomFolder) {
+    throw new Error("No asset folders found");
+  }
+
+  const ls = await fs.readdir(randomFolder);
 
   const effectGifs = ls.filter((el) => el.endsWith(".gif"));
   const randomEl = Math.floor(Math.random() * effectGifs.length);
@@ -27,7 +37,7 @@ export async function combineRandomEffect(
   if (!randomGif) {
     throw new Error("Random gif")
   }
-  const firstGifLoc = path.join(dir, randomGif);
+  const firstGifLoc = path.join(randomFolder, randomGif);
 
   let targetImg: JimpRead | Gif;
   if (sourceImg instanceof Buffer) {

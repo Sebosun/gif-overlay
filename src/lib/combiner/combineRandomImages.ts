@@ -6,44 +6,63 @@ import { getRatio } from "./ratio";
 import sharp from "sharp";
 import { GifCombiner, jimpGuardType } from "./GifCombiner";
 import { type Placement, RandomPlacement } from "./placement";
-import { getEffectsDir, getRandomDir, getTomatoDir } from "@/lib/files/useLocation";
+import { getAssetsDir, getEffectsDir, getTomatoDir } from "@/lib/files/useLocation";
 import type { JimpRead } from "@/types/Jimp";
-import { config } from "@/config"
+import { config } from "@/config";
 
 const BASE_MAX_RES = config.randomImageMaxResolution;
 const maxResTotal = BASE_MAX_RES.height * BASE_MAX_RES.width;
 
 // If it breaks here idc because the bot wont even start
 /**
- * Applies one randomly selected GIF from each random-overlay category to an image.
+ * Applies one randomly selected GIF from each of four random asset folders to an image.
  *
  * @param sourceImg - Image or GIF to use as the composition base.
  * @param scaleInitImage - Whether oversized static images should be scaled down.
  * @param isRandom - Whether each overlay position should be randomized.
  * @returns The composed image as a JPEG or GIF buffer.
  */
-export async function combineRandomImagesFactory(sourceImg: Buffer | JimpRead | Gif, scaleInitImage: boolean, isRandom: boolean): Promise<Buffer> {
-  const randomGifs = [] as string[];
+export async function combineRandomImagesFactory(
+  sourceImg: Buffer | JimpRead | Gif,
+  scaleInitImage: boolean,
+  isRandom: boolean,
+): Promise<Buffer> {
+  const dir = getAssetsDir();
+  const entries = await fs.readdir(dir, { withFileTypes: true });
+  const folders = entries
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => path.join(dir, entry.name));
 
-  // TODO: we need to rethink this, i dont like having one folder with 3 separate "possible" items
-  const dir = getRandomDir()
-  const ls = await fs.readdir(dir);
+  const MAX_GIF_COUNT = 4;
+  const selectedFolders: string[] = [];
 
-  // TODO: refactor so it doesnt fs.readfiles everytime this function launches
-  for (const folder of ls) {
-    const folderPath = path.join(dir, folder);
-    const items = await fs.readdir(folderPath);
-    const gifs = items.filter((el) => el.endsWith(".gif"));
-
-    const randomEl = Math.floor(Math.random() * gifs.length);
-    const randomGif = gifs[randomEl];
-    if (randomGif) {
-      const gifPath = path.join(folderPath, randomGif);
-      randomGifs.push(gifPath);
+  for (let index = 0; index < MAX_GIF_COUNT; index++) {
+    const randomIndex = Math.floor(Math.random() * folders.length);
+    const randomFolder = folders.splice(randomIndex, 1)[0];
+    if (randomFolder) {
+      selectedFolders.push(randomFolder);
     }
   }
 
-  return await combineRandomImages({ sourceImg, scaleInitImage, randomizePositions: isRandom, gifsToCombine: randomGifs })
+  const randomGifs: string[] = [];
+  for (const folderPath of selectedFolders) {
+    const files = await fs.readdir(folderPath);
+    const gifs = files.filter((file) => file.endsWith(".gif"));
+    const randomGif = gifs[Math.floor(Math.random() * gifs.length)];
+
+    if (!randomGif) {
+      continue
+    }
+
+    randomGifs.push(path.join(folderPath, randomGif));
+  }
+
+  return await combineRandomImages({
+    sourceImg,
+    scaleInitImage,
+    randomizePositions: isRandom,
+    gifsToCombine: randomGifs,
+  });
 }
 
 /**
@@ -55,22 +74,31 @@ export async function combineRandomImagesFactory(sourceImg: Buffer | JimpRead | 
  * @param isRandom - Whether the effect position should be randomized.
  * @returns The composed image as a JPEG or GIF buffer.
  */
-export async function combineRandomEffectFactory(sourceImg: Buffer | JimpRead | Gif, scaleInitImage: boolean, isRandom: boolean): Promise<Buffer> {
-  const dir = getEffectsDir()
+export async function combineRandomEffectFactory(
+  sourceImg: Buffer | JimpRead | Gif,
+  scaleInitImage: boolean,
+  isRandom: boolean,
+): Promise<Buffer> {
+  const dir = getEffectsDir();
   const ls = await fs.readdir(dir);
 
   const effectGifs = ls.filter((el) => el.endsWith(".gif"));
   const randomEl = Math.floor(Math.random() * effectGifs.length);
   const randomGif = effectGifs[randomEl];
-  const gifPath = path.join(dir, randomGif ?? '');
+  const gifPath = path.join(dir, randomGif ?? "");
 
   if (!randomGif) {
-    throw new Error("Missing gif")
+    throw new Error("Missing gif");
   }
 
-  const result = await combineRandomImages({ sourceImg, scaleInitImage, randomizePositions: isRandom, gifsToCombine: [gifPath] })
+  const result = await combineRandomImages({
+    sourceImg,
+    scaleInitImage,
+    randomizePositions: isRandom,
+    gifsToCombine: [gifPath],
+  });
 
-  return result
+  return result;
 }
 
 /**
@@ -82,31 +110,42 @@ export async function combineRandomEffectFactory(sourceImg: Buffer | JimpRead | 
  * @param randomizePositions - Whether the tomato position should be randomized.
  * @returns The composed image as a JPEG or GIF buffer.
  */
-export async function combineWithTomato(sourceImg: Buffer | JimpRead | Gif, scaleInitImage: boolean, randomizePositions: boolean): Promise<Buffer> {
-  const dir = getTomatoDir()
+export async function combineWithTomato(
+  sourceImg: Buffer | JimpRead | Gif,
+  scaleInitImage: boolean,
+  randomizePositions: boolean,
+): Promise<Buffer> {
+  const dir = getTomatoDir();
   const ls = await fs.readdir(dir);
 
   const effectGifs = ls.filter((el) => el.endsWith(".gif"));
   const randomEl = Math.floor(Math.random() * effectGifs.length);
   const randomGif = effectGifs[randomEl];
-  const gifPath = path.join(dir, randomGif ?? '');
+  const gifPath = path.join(dir, randomGif ?? "");
 
   if (!randomGif) {
-    throw new Error("Missing gif")
+    throw new Error("Missing gif");
   }
-  const result = await combineRandomImages({ sourceImg, scaleInitImage, randomizePositions, gifsToCombine: [gifPath], placement: "tomato", ratio: config.tomatoOverlayRatio })
+  const result = await combineRandomImages({
+    sourceImg,
+    scaleInitImage,
+    randomizePositions,
+    gifsToCombine: [gifPath],
+    placement: "tomato",
+    ratio: config.tomatoOverlayRatio,
+  });
 
-  return result
+  return result;
 }
 
 interface CombineOptions {
-  sourceImg: Buffer | JimpRead | Gif
-  scaleInitImage: boolean
-  randomizePositions: boolean
-  gifsToCombine: string[]
-  placement?: Placement
-  ratio?: number
-  randomizePlacement?: boolean
+  sourceImg: Buffer | JimpRead | Gif;
+  scaleInitImage: boolean;
+  randomizePositions: boolean;
+  gifsToCombine: string[];
+  placement?: Placement;
+  ratio?: number;
+  randomizePlacement?: boolean;
 }
 
 /**
@@ -116,7 +155,15 @@ interface CombineOptions {
  * @returns The composed image as a JPEG or GIF buffer.
  */
 export async function combineRandomImages(opts: CombineOptions): Promise<Buffer> {
-  const { sourceImg, scaleInitImage, randomizePositions, gifsToCombine: randomGifs, ratio, randomizePlacement, placement } = opts
+  const {
+    sourceImg,
+    scaleInitImage,
+    randomizePositions,
+    gifsToCombine: randomGifs,
+    ratio,
+    randomizePlacement,
+    placement,
+  } = opts;
 
   const randomPlacements = new RandomPlacement();
   let targetImg: JimpRead | Gif;
@@ -144,7 +191,7 @@ export async function combineRandomImages(opts: CombineOptions): Promise<Buffer>
   const firstGifLoc = randomGifs.pop();
 
   if (!firstGifLoc) {
-    throw new Error("Couldnt get the first gif...")
+    throw new Error("Couldnt get the first gif...");
   }
 
   const firstGif = await GifUtil.read(firstGifLoc);
@@ -156,7 +203,7 @@ export async function combineRandomImages(opts: CombineOptions): Promise<Buffer>
     placement: localPlacement,
     randomizePositions: randomizePositions,
     randomPlacement: randomizePlacement, // needs to be ranamed
-    ratio: ratio
+    ratio: ratio,
   });
 
   let gif = await combiner.run();
@@ -171,7 +218,7 @@ export async function combineRandomImages(opts: CombineOptions): Promise<Buffer>
       placement: localPlacement,
       randomizePositions: randomizePositions,
       randomPlacement: randomizePlacement,
-      ratio: ratio
+      ratio: ratio,
     });
 
     gif = await combiner.run();
