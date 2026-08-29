@@ -18,7 +18,7 @@ export async function boomerify(message: OmitPartialGroupDMChannel<Message<boole
     const [err, buffer] = await extractImage(message)
     if (err) {
       logger.error({ err }, 'Failed to extract image')
-      await message.reply("This aint if chef, I'm too weak for this one.")
+      await message.reply("This aint if chef, I'm too weak for this one." + err.message)
       return
     }
     logger.info({ duration: performance.now() - start }, 'Extracting gif')

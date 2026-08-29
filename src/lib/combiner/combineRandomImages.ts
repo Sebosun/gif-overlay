@@ -25,6 +25,7 @@ const maxResTotal = BASE_MAX_RES.height * BASE_MAX_RES.width;
 export async function combineRandomImagesFactory(sourceImg: Buffer | JimpRead | Gif, scaleInitImage: boolean, isRandom: boolean): Promise<Buffer> {
   const randomGifs = [] as string[];
 
+  // TODO: we need to rethink this, i dont like having one folder with 3 separate "possible" items
   const dir = getRandomDir()
   const ls = await fs.readdir(dir);
 

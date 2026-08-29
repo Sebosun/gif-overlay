@@ -33,19 +33,19 @@ export function getRootDir(): string {
 }
 
 export function getRandomDir(): string {
-  const RANDOM_DIR = "assets/randomizer";
+  const RANDOM_DIR = "random";
   const dir = path.join(getAssetsDir(), RANDOM_DIR);
   return dir;
 }
 
 export function getEffectsDir(): string {
-  const EFFECTS_DIR = "assets/effects";
+  const EFFECTS_DIR = "effects";
   const dir = path.join(getStorageLocation(), EFFECTS_DIR);
   return dir;
 }
 
 export function getTomatoDir(): string {
-  const TOMATO_DIR = "assets/tomato";
+  const TOMATO_DIR = "tomato";
   const dir = path.join(getStorageLocation(), TOMATO_DIR);
   return dir;
 }
