@@ -1,5 +1,7 @@
 const ONE_SEC = 1000
 const ONE_MIN = ONE_SEC * 60
+
+// TODO: Refactor this flat configuration object into domain-specific configuration modules.
 export const config = {
   // Timeouts & Intervals
   typingIndicatorIntervalMs: ONE_SEC * 10,
@@ -10,7 +12,7 @@ export const config = {
 
   // Message Fetching
   messageSearchLimit: 50,
-  maxMessagesToFetch: 5000,
+  maxMessagesToFetch: 500,
   messagesPerRequestLimit: 100,
   messagesBeforeSaveThreshold: 100,
 

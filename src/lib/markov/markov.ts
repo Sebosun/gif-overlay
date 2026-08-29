@@ -3,18 +3,31 @@ import fs from "fs/promises";
 import { restoreStringifiedMap, stringifyMap } from "@/lib/stringifyMap";
 import type { FlatCatch } from "@/types/Common";
 import { config } from "@/config";
-import { getAssetsDir } from "../files/useLocation";
+import { getAssetsDir, getMarkovPath } from "../files/useLocation";
 
 const stripRegex = /[$&+,;=?#|'^*()%")(\n]/g;
 
 type ChainLink = Map<string, number>;
 type MarkovChain = Map<string, ChainLink>;
 
+/**
+ * Normalizes a token for use as a Markov chain key.
+ *
+ * @param text - Token or n-gram to normalize.
+ * @returns Lowercase text with configured punctuation removed.
+ */
 const sanitize = (text?: string) => {
   if (!text) return "";
   return text.toLowerCase().replace(stripRegex, "");
 };
 
+/**
+ * Builds a weighted n-gram transition chain from source messages.
+ *
+ * @param texts - Messages from which to derive word transitions.
+ * @param ngrams - Number of consecutive words in each transition target.
+ * @returns A map of source words to weighted next n-grams.
+ */
 const constructMarkovRefactor = (
   texts: string[],
   ngrams: number = config.markovDefaultNgrams,
@@ -64,6 +77,12 @@ const constructMarkovRefactor = (
   return markovChain;
 };
 
+/**
+ * Calculates a weighted score for a chain's possible next n-grams.
+ *
+ * @param input - Weighted transitions to score.
+ * @returns The sum of each n-gram's character length multiplied by its frequency.
+ */
 const calculateScore = (input?: Map<string, number>): number => {
   let totalScore = 0;
   if (!input) return totalScore;
@@ -75,6 +94,12 @@ const calculateScore = (input?: Map<string, number>): number => {
   return totalScore;
 };
 
+/**
+ * Removes empty and single-word messages that cannot form Markov transitions.
+ *
+ * @param text - Raw messages collected from a channel.
+ * @returns Messages suitable for building Markov chains.
+ */
 export function prepareTexts(text: string[]): string[] {
   const filterEmpty = text.filter((el) => el !== "");
   const sanitized = filterEmpty.filter((el) => el.split(" ").length > 1);
@@ -82,6 +107,16 @@ export function prepareTexts(text: string[]): string[] {
   return sanitized;
 }
 
+/**
+ * Generates text from saved one-, two-, and three-gram chains for a channel.
+ *
+ * A supplied seed is retried before falling back to an unseeded chain start when
+ * generated text is shorter than the configured minimum length.
+ *
+ * @param channelId - Channel whose saved chains are used.
+ * @param firstMsg - Optional seed text for generation.
+ * @returns Generated Markov text.
+ */
 export async function generateMarkovRefactor(channelId: string, firstMsg?: string) {
   // TODO: additional chceks dawg
   // ... ciekawe co autor mial na mysli tutaj bo juz nie pamietam
@@ -202,11 +237,25 @@ export async function generateMarkovRefactor(channelId: string, firstMsg?: strin
   return result;
 }
 
+/**
+ * Gets the persisted Markov n-gram file path for a channel.
+ *
+ * @param channelId - Channel that owns the chain.
+ * @param count - N-gram size represented by the file.
+ * @returns Absolute path to the chain's JSON file.
+ */
 export const getSavePath = (channelId: string, count: number) => {
   const fileName = `${channelId}-markov-ngram${count}.json`;
-  return path.join(getAssetsDir(), "markov", fileName);
+  return path.join(getMarkovPath(), fileName);
 };
 
+/**
+ * Builds and persists one-, two-, and three-gram Markov chains for a channel.
+ *
+ * @param text - Raw messages collected from the channel.
+ * @param channelId - Channel that owns the generated chains.
+ * @returns A tuple containing a write error, if one occurred.
+ */
 export async function generateSaveMarkov(text: string[], channelId: string): Promise<FlatCatch> {
   const sanitized = prepareTexts(text);
 

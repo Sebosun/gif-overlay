@@ -9,6 +9,7 @@ import type pino from "pino";
 import { setErrorTimeout } from "./setErrorTimeout";
 import { updateSavedMarkovs } from "./updateChannels";
 
+/** Options required to begin watching a Discord channel. */
 interface WatchChannelOpts {
   id: string
   client: Client<boolean>
@@ -19,14 +20,35 @@ interface WatchChannelOpts {
 const watchedChannels: Set<string> = new Set()
 const watchInProgress: Map<string, Promise<FlatCatch>> = new Map()
 
+/**
+ * Lists channel IDs registered in this process.
+ *
+ * @deprecated This method has no callers. Use `isWatched` for membership checks.
+ * @returns IDs of channels currently registered for Markov updates.
+ */
 function getAll(): string[] {
   return watchedChannels.values().toArray()
 }
 
+/**
+ * Checks whether a channel is registered for Markov updates in this process.
+ *
+ * @param id - Discord channel ID to check.
+ * @returns Whether the channel is currently watched.
+ */
 function isWatched(id: string): boolean {
   return watchedChannels.has(id)
 }
 
+/**
+ * Fetches a channel's messages, persists them, and generates its Markov chains.
+ *
+ * Concurrent requests for the same channel share the pending operation. Channels are
+ * registered only after message persistence and chain generation both succeed.
+ *
+ * @param opts - Channel, Discord client, and logger used for initialization.
+ * @returns A tuple containing an initialization error, if one occurred.
+ */
 async function watch(opts: WatchChannelOpts): FlatPromise {
   const { id, client, logger } = opts
 
@@ -68,6 +90,11 @@ async function watch(opts: WatchChannelOpts): FlatPromise {
   return pending
 }
 
+/**
+ * Restores watched channel IDs from persisted message files.
+ *
+ * @returns A tuple containing a persistence-read error, if one occurred.
+ */
 async function updateChannels(): FlatPromise {
   const [error, channels] = await getMessagesFilePaths()
 
@@ -85,6 +112,14 @@ async function updateChannels(): FlatPromise {
   return [undefined, undefined]
 }
 
+/**
+ * Starts production-only restoration and periodic Markov chain regeneration.
+ *
+ * Persisted watched channels are restored immediately, then refreshed at the
+ * configured Markov update interval. This does nothing outside production.
+ *
+ * @returns A promise that resolves after initial restoration is attempted.
+ */
 async function initObserver(): Promise<void> {
   if (process.env.NODE_ENV !== "production") {
     return

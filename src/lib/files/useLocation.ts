@@ -54,3 +54,7 @@ export function getAssetTagDir(asset: typeof GOOD_TAGS[number]): string {
   const dir = path.join(getStorageLocation(), `assets/${asset.folderName}`);
   return dir;
 }
+
+export function getMarkovPath() {
+  return path.join(getAssetsDir(), "markov");
+}
