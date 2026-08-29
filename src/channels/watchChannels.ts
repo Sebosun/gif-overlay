@@ -95,10 +95,11 @@ async function watch(opts: WatchChannelOpts): FlatPromise {
  *
  * @returns A tuple containing a persistence-read error, if one occurred.
  */
-async function updateChannels(): FlatPromise {
+async function updateChannels(logger: pino.Logger): FlatPromise {
   const [error, channels] = await getMessagesFilePaths()
 
   if (error) {
+    logger.error({ err: error }, "Failed to retrieve saved channels")
     return [error, undefined]
   }
 
@@ -120,21 +121,21 @@ async function updateChannels(): FlatPromise {
  *
  * @returns A promise that resolves after initial restoration is attempted.
  */
-async function initObserver(): Promise<void> {
+async function initObserver(logger: pino.Logger): Promise<void> {
   if (process.env.NODE_ENV !== "production") {
     return
   }
 
   const ONE_HOUR = config.markovUpdateIntervalMs
 
-  const [error] = await updateChannels()
+  const [error] = await updateChannels(logger)
 
   if (!error) {
     updateSavedMarkovs()
   }
 
   setInterval(async () => {
-    const [error] = await updateChannels()
+    const [error] = await updateChannels(logger)
     if (!error) {
       await updateSavedMarkovs()
     }

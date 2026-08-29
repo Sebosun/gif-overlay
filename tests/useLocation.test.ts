@@ -6,6 +6,8 @@ import { ensureUploadFoldersExist } from "../src/lib/files/ensureFoldersExist";
 import {
   getAssetTagDir,
   getEffectsDir,
+  getMarkovPath,
+  getMessagesPath,
   getRandomDir,
   getRootDir,
   getStorageLocation,
@@ -29,6 +31,20 @@ describe("storage locations", () => {
     const location = getTransformedLocation();
 
     expect(location).toBe(path.join(getStorageLocation(), "transformed"));
+    await expect(fs.stat(location)).resolves.toBeDefined();
+  });
+
+  test("returns the saved message directory", async () => {
+    const location = getMessagesPath();
+
+    expect(location).toBe(path.join(getStorageLocation(), "messages"));
+    await expect(fs.stat(location)).resolves.toBeDefined();
+  });
+
+  test("returns the Markov chain directory", async () => {
+    const location = getMarkovPath();
+
+    expect(location).toBe(path.join(getStorageLocation(), "markov"));
     await expect(fs.stat(location)).resolves.toBeDefined();
   });
 

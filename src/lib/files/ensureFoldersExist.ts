@@ -1,5 +1,6 @@
 import { existsSync } from "fs";
-import { mkdir } from "node:fs/promises";
+import { mkdir, rename } from "node:fs/promises";
+import path from "path";
 import {
   getAssetsDir,
   getAssetTagDir,
@@ -20,6 +21,12 @@ async function ensureUserFolderExists(location: string): Promise<void> {
   }
 }
 
+async function moveLegacyFolder(location: string, destination: string): Promise<void> {
+  if (!existsSync(location) || existsSync(destination)) return;
+
+  await rename(location, destination);
+}
+
 /**
  * Making sure that storage folders exists.
  * These are used for storing user data, markov chains etc.
@@ -35,6 +42,10 @@ export async function ensureUploadFoldersExist(): Promise<void> {
 
   await ensureUserFolderExists(transformedLoc);
   await ensureUserFolderExists(assetsDirLocation);
+
+  await moveLegacyFolder(path.join(assetsDirLocation, "messages"), messages);
+  await moveLegacyFolder(path.join(assetsDirLocation, "markov"), markovPath);
+
   await ensureUserFolderExists(messages);
   await ensureUserFolderExists(markovPath);
 

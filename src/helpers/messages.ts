@@ -2,7 +2,7 @@ import path from "path"
 import fs from "fs/promises"
 import type { FlatPromise } from "@/types/Common"
 import type { ParsedSavedMessage } from "@/types/Messages"
-import { getAssetsDir, getMessagesPath } from "@/lib/files/useLocation"
+import { getMessagesPath } from "@/lib/files/useLocation"
 
 export interface MessageFile {
   id: string
@@ -13,7 +13,7 @@ export interface MessageFile {
  * Builds the path for a channel's persisted message history JSON file.
  */
 export const getChannelPath = (channelId: string) => {
-  return path.join(getAssetsDir(), "messages", channelId + ".json")
+  return path.join(getMessagesPath(), channelId + ".json")
 }
 
 /**

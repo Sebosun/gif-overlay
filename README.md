@@ -47,7 +47,7 @@ The markov system works in two stages:
 
 **Collection**: When `.markov` is used in a channel for the first time, the bot fetches message history and saves it. After that, new messages in watched channels are queued in memory (`handleMessagesQueue.ts`) and flushed to disk after a configurable threshold.
 
-**Background updates**: In production (`NODE_ENV=production`), `watchChannels.ts` runs an hourly interval that re-reads saved messages for all watched channels and regenerates markov chain data. Chains are built at multiple n-gram sizes (1, 2, 3) and stored as JSON files in `assets/markov/`.
+**Background updates**: In production (`NODE_ENV=production`), `watchChannels.ts` restores watched channel IDs from saved messages, then runs an hourly interval that re-reads their messages and regenerates Markov chain data. Saved channels are not restored outside production. Chains are built at multiple n-gram sizes (1, 2, 3) and stored as JSON files in `markov/`.
 
 ## Configuration
 

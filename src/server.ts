@@ -19,7 +19,7 @@ export async function startDiscordServer() {
 
   client.once(Events.ClientReady, async () => {
     logger.info({ tag: client.user?.tag, uid: client.user?.id, guildCount: client.guilds.cache.size }, 'Bot is ready and online');
-    watchChannelsManager.initObserver()
+    watchChannelsManager.initObserver(logger)
   });
 
   client.on(Events.MessageCreate, (message) => {

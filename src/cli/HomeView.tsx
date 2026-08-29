@@ -4,14 +4,14 @@ import { useListNavigation } from "./useListNavigation";
 import { useState } from "react";
 import type { Views } from "./ink";
 import { Title } from "./Title";
-import { getAssetsDir, getTransformedLocation } from "@/lib/files/useLocation";
+import { getAssetsDir, getMarkovPath, getMessagesPath, getTransformedLocation } from "@/lib/files/useLocation";
 import fs from "fs/promises";
 import { cleanupFiles } from "@/lib/files/cleanupFiles";
 import path from "path";
 import type { FlatPromise } from "@/types/Common";
 import { ensureUploadFoldersExist } from "@/lib/files/ensureFoldersExist";
 
-type ActionNames = "Fetch GIFs" | "Clean transformed images" | "Clean assets";
+type ActionNames = "Fetch GIFs" | "Clean transformed images" | "Clean assets" | "Clear saved messages and Markov chains";
 
 interface Action {
   name: ActionNames;
@@ -55,6 +55,15 @@ async function onClearAssets(): FlatPromise {
   }
 }
 
+async function clearSavedMarkovData(): FlatPromise {
+  const [messagesError] = await clearFolderContents(getMessagesPath(), "Couldn't remove saved messages");
+  if (messagesError) {
+    return [messagesError, undefined];
+  }
+
+  return clearFolderContents(getMarkovPath(), "Couldn't remove Markov chains");
+}
+
 export function HomeView({ onNavigate }: Props) {
   const { exit } = useApp();
   const [message, setMessage] = useState("Select an action to continue.");
@@ -69,6 +78,9 @@ export function HomeView({ onNavigate }: Props) {
     },
     {
       name: "Clean assets",
+    },
+    {
+      name: "Clear saved messages and Markov chains",
     },
   ] as const;
 
@@ -97,6 +109,16 @@ export function HomeView({ onNavigate }: Props) {
           } else {
             setStatusRefreshVersion((version) => version + 1);
             setMessage("Cleared assets");
+          }
+          break;
+        case "Clear saved messages and Markov chains":
+          setMessage("Deleting saved messages and Markov chains...");
+          const [markovError] = await clearSavedMarkovData();
+          if (markovError) {
+            setMessage(`Something went wrong trying to delete files ${markovError.message}`);
+          } else {
+            setStatusRefreshVersion((version) => version + 1);
+            setMessage("Cleared saved messages and Markov chains");
           }
           break;
       }

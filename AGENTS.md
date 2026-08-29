@@ -12,7 +12,7 @@
 - Image/GIF composition lives in `src/lib/combiner/`; filesystem locations and persisted data paths are centralized in `src/lib/files/`.
 - `src/index.ts` is the bot entrypoint: it creates the Discord client, ensures storage folders, and wires raw message commands, interactions, and Markov collection.
 - `src/commandsRaw/` handles `.`-prefixed text commands; `src/commands/` defines and dispatches Discord slash commands.
-- Markov channel messages and generated chains are persisted under `assets/markov/`; these JSON artifacts are ignored. In production only, `watchChannelsManager.initObserver()` reloads watched channels and regenerates chains hourly.
+- Markov channel messages and generated chains are persisted under `messages/` and `markov/`; these JSON artifacts are ignored. In production only, `watchChannelsManager.initObserver()` reloads watched channels and regenerates chains hourly.
 - Change tunable limits, image ratios, encoding settings, and intervals in `src/config.ts`, not at individual call sites.
 
 ## Operational Constraints

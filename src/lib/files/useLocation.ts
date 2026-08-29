@@ -20,7 +20,7 @@ export function getAssetsDir(): string {
 }
 
 export function getMessagesPath(): string {
-  return path.join(getAssetsDir(), "messages");
+  return path.join(getStorageLocation(), "messages");
 }
 
 // transformed images loc
@@ -56,5 +56,5 @@ export function getAssetTagDir(asset: typeof GOOD_TAGS[number]): string {
 }
 
 export function getMarkovPath() {
-  return path.join(getAssetsDir(), "markov");
+  return path.join(getStorageLocation(), "markov");
 }
