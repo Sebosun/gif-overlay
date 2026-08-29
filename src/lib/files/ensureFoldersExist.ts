@@ -3,6 +3,7 @@ import { mkdir } from "node:fs/promises";
 import {
   getAssetsDir,
   getAssetTagDir,
+  getMessagesPath,
   getStorageLocation,
   getTransformedLocation,
 } from "./useLocation";
@@ -26,10 +27,13 @@ export async function ensureUploadFoldersExist(): Promise<void> {
   const storageLocation = getStorageLocation();
   const assetsDirLocation = getAssetsDir();
   const transformedLoc = getTransformedLocation();
+  const messages = getMessagesPath();
 
   await ensureUserFolderExists(storageLocation);
+
   await ensureUserFolderExists(transformedLoc);
   await ensureUserFolderExists(assetsDirLocation);
+  await ensureUserFolderExists(messages);
 
   for (const el of GOOD_TAGS) {
     const dir = getAssetTagDir(el);

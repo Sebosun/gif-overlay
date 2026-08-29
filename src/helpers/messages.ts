@@ -2,6 +2,7 @@ import path from "path"
 import fs from "fs/promises"
 import type { FlatPromise } from "@/types/Common"
 import type { ParsedSavedMessage } from "@/types/Messages"
+import { getAssetsDir, getMessagesPath } from "@/lib/files/useLocation"
 
 export interface MessageFile {
   id: string
@@ -12,8 +13,7 @@ export interface MessageFile {
  * Builds the path for a channel's persisted message history JSON file.
  */
 export const getChannelPath = (channelId: string) => {
-  const projectRoot = process.cwd();
-  return path.join(projectRoot, "assets", "messages", channelId + ".json")
+  return path.join(getAssetsDir(), "messages", channelId + ".json")
 }
 
 /**
@@ -22,8 +22,7 @@ export const getChannelPath = (channelId: string) => {
  * @returns A flat result containing matching JSON files or the directory-read error.
  */
 export async function getMessagesFilePaths(): FlatPromise<MessageFile[]> {
-  const projectRoot = process.cwd();
-  const messagesPath = path.join(projectRoot, "assets", "messages")
+  const messagesPath = getMessagesPath()
 
   try {
     const messageFiles = await fs.readdir(messagesPath)

@@ -19,6 +19,10 @@ export function getAssetsDir(): string {
   return path.join(getStorageLocation(), "assets");
 }
 
+export function getMessagesPath(): string {
+  return path.join(getAssetsDir(), "messages");
+}
+
 // transformed images loc
 export function getTransformedLocation(): string {
   return path.join(getStorageLocation(), "transformed");
