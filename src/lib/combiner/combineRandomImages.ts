@@ -14,6 +14,14 @@ const BASE_MAX_RES = config.randomImageMaxResolution;
 const maxResTotal = BASE_MAX_RES.height * BASE_MAX_RES.width;
 
 // If it breaks here idc because the bot wont even start
+/**
+ * Applies one randomly selected GIF from each random-overlay category to an image.
+ *
+ * @param sourceImg - Image or GIF to use as the composition base.
+ * @param scaleInitImage - Whether oversized static images should be scaled down.
+ * @param isRandom - Whether each overlay position should be randomized.
+ * @returns The composed image as a JPEG or GIF buffer.
+ */
 export async function combineRandomImagesFactory(sourceImg: Buffer | JimpRead | Gif, scaleInitImage: boolean, isRandom: boolean): Promise<Buffer> {
   const randomGifs = [] as string[];
 
@@ -37,6 +45,15 @@ export async function combineRandomImagesFactory(sourceImg: Buffer | JimpRead | 
   return await combineRandomImages({ sourceImg, scaleInitImage, randomizePositions: isRandom, gifsToCombine: randomGifs })
 }
 
+/**
+ * Applies a randomly selected effect GIF to an image.
+ *
+ * @deprecated This helper has no callers. Use `combineRandomImages` when restoring effect composition.
+ * @param sourceImg - Image or GIF to use as the composition base.
+ * @param scaleInitImage - Whether oversized static images should be scaled down.
+ * @param isRandom - Whether the effect position should be randomized.
+ * @returns The composed image as a JPEG or GIF buffer.
+ */
 export async function combineRandomEffectFactory(sourceImg: Buffer | JimpRead | Gif, scaleInitImage: boolean, isRandom: boolean): Promise<Buffer> {
   const dir = getEffectsDir()
   const ls = await fs.readdir(dir);
@@ -55,6 +72,15 @@ export async function combineRandomEffectFactory(sourceImg: Buffer | JimpRead | 
   return result
 }
 
+/**
+ * Applies a randomly selected tomato GIF to an image using tomato placement settings.
+ *
+ * @deprecated This helper has no callers. Use `combineRandomImages` when restoring tomato composition.
+ * @param sourceImg - Image or GIF to use as the composition base.
+ * @param scaleInitImage - Whether oversized static images should be scaled down.
+ * @param randomizePositions - Whether the tomato position should be randomized.
+ * @returns The composed image as a JPEG or GIF buffer.
+ */
 export async function combineWithTomato(sourceImg: Buffer | JimpRead | Gif, scaleInitImage: boolean, randomizePositions: boolean): Promise<Buffer> {
   const dir = getTomatoDir()
   const ls = await fs.readdir(dir);
@@ -82,6 +108,12 @@ interface CombineOptions {
   randomizePlacement?: boolean
 }
 
+/**
+ * Composes one or more GIF overlays onto an image or GIF.
+ *
+ * @param opts - Composition source, overlays, placement, and scaling options.
+ * @returns The composed image as a JPEG or GIF buffer.
+ */
 export async function combineRandomImages(opts: CombineOptions): Promise<Buffer> {
   const { sourceImg, scaleInitImage, randomizePositions, gifsToCombine: randomGifs, ratio, randomizePlacement, placement } = opts
 

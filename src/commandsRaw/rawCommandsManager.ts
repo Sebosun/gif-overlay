@@ -13,6 +13,9 @@ export type ManualCommand = (
   logger: pino.Logger,
 ) => Promise<void>;
 
+// Raw commands are the ones that are parsed through peoples messages in the server
+// not called with `/command`
+
 export type Commands = "boomerify" | "pomusz" | "effect" | "markov" | "tomato";
 
 export interface CommandDetails {

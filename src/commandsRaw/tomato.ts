@@ -36,7 +36,7 @@ export async function tomato(message: OmitPartialGroupDMChannel<Message<boolean>
     const [err, imagePath] = await extractImagePathName(message)
 
     if (err) {
-      await message.reply("This aint if chef, I'm too weak for this one.")
+      await message.reply(err.message)
       logger.error(err)
       return
     }

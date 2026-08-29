@@ -10,6 +10,7 @@ export const GOOD_TAGS = [
   { name: "Good morning", tagAPIName: "good morning", folderName: "good_morning" },
   { name: "Anime", tagAPIName: "anime", folderName: "anime" },
   { name: "Kawaii", tagAPIName: "kawaii", folderName: "kawaii" },
+  { name: "Effects", tagAPIName: "effects", folderName: "effects" },
 ] as const;
 
 export const STAMPS_PER_PAGE = 18;

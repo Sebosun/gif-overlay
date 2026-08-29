@@ -3,6 +3,13 @@ import { commandBuilder, optimizeCommand } from "./builder";
 import { getAssetsDir, getTransformedLocation } from "@/lib/files/useLocation";
 import { execWithTimeout } from "@/util/execWithTimeout";
 
+/**
+ * Overlays the tomato GIF onto an input image and creates optimized and unoptimized GIF outputs.
+ *
+ * @param inputImagePath - Path to the source image.
+ * @param amount - Number of tomato overlays to apply.
+ * @returns Paths to the unoptimized and optimized GIFs, respectively.
+ */
 export async function ffmpegCombineTomato(
   inputImagePath: string,
   amount: number = 1,

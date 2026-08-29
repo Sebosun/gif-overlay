@@ -1,5 +1,5 @@
 import type { Message, OmitPartialGroupDMChannel } from "discord.js"
-import { getUrl } from "../util/getUrl"
+import { getAttachementUrl } from "../util/getUrl"
 import fs from 'fs/promises'
 import { Gif, GifUtil } from "gifwrap"
 import { mp4ToGif } from "./mp4ToGif"
@@ -15,7 +15,7 @@ const EXTRACT_GIF_ERRORS = {
 } as const
 
 export async function extractImage(message: OmitPartialGroupDMChannel<Message<boolean>>): Promise<FlatCatch<Buffer | Gif>> {
-  const url = await getUrl(message)
+  const url = await getAttachementUrl(message)
   const urlOBJ = new URL(url)
 
   const id = message.id
@@ -59,7 +59,7 @@ export async function extractImage(message: OmitPartialGroupDMChannel<Message<bo
 }
 
 export async function extractImagePathName(message: OmitPartialGroupDMChannel<Message<boolean>>): Promise<FlatCatch<string>> {
-  const url = await getUrl(message)
+  const url = await getAttachementUrl(message)
   const urlOBJ = new URL(url)
 
   const id = message.id
@@ -75,7 +75,7 @@ export async function extractImagePathName(message: OmitPartialGroupDMChannel<Me
   const extension = baseName.split('.').pop()
 
   if (baseName.endsWith('mp4')) {
-    return [new Error("other files not supported now dawg"), undefined]
+    return [new Error("File type is not supported, my jigga."), undefined]
   }
 
   const response = await fetch(url, {
