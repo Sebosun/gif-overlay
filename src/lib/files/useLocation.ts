@@ -50,6 +50,10 @@ export function getTomatoDir(): string {
   return dir;
 }
 
+export function getTomatoPath(): string {
+  return path.join(getAssetsDir(), "tomato.gif");
+}
+
 export function getAssetTagDir(asset: typeof GOOD_TAGS[number]): string {
   const dir = path.join(getStorageLocation(), `assets/${asset.folderName}`);
   return dir;

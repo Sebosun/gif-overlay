@@ -12,6 +12,7 @@ import {
   getRootDir,
   getStorageLocation,
   getTomatoDir,
+  getTomatoPath,
   getTransformedLocation,
 } from "../src/lib/files/useLocation";
 
@@ -62,6 +63,10 @@ describe("storage locations", () => {
 
   test("returns the tomato asset directory", () => {
     expect(getTomatoDir()).toBe(path.join(getStorageLocation(), "assets", "tomato"));
+  });
+
+  test("returns the tomato GIF path", () => {
+    expect(getTomatoPath()).toBe(path.join(getStorageLocation(), "assets", "tomato.gif"));
   });
 
   test("returns a tag-specific asset directory", () => {

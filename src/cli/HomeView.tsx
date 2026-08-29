@@ -1,17 +1,18 @@
 import { Box, Text, useApp, useInput } from "ink";
 import { Status } from "./Status";
 import { useListNavigation } from "./useListNavigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Views } from "./ink";
 import { Title } from "./Title";
-import { getAssetsDir, getMarkovPath, getMessagesPath, getTransformedLocation } from "@/lib/files/useLocation";
-import fs from "fs/promises";
-import { cleanupFiles } from "@/lib/files/cleanupFiles";
-import path from "path";
-import type { FlatPromise } from "@/types/Common";
-import { ensureUploadFoldersExist } from "@/lib/files/ensureFoldersExist";
+import {
+  cleanAssets,
+  cleanTransformedImages,
+  clearSavedMarkovData,
+  createTomatoGif,
+  tomatoGifExists,
+} from "./actions/files";
 
-type ActionNames = "Fetch GIFs" | "Clean transformed images" | "Clean assets" | "Clear saved messages and Markov chains";
+type ActionNames = "Fetch GIFs" | "Create tomato GIF" | "Clean transformed images" | "Clean assets" | "Clear saved messages and Markov chains";
 
 interface Action {
   name: ActionNames;
@@ -21,57 +22,22 @@ interface Props {
   onNavigate: (view: Views) => void;
 }
 
-async function clearFolderContents(dir: string, fallbackError: string): FlatPromise {
-  try {
-    const ls = await fs.readdir(dir);
-    for (const element of ls) {
-      const folderPath = path.join(dir, element);
-      await cleanupFiles(folderPath);
-    }
-
-    return [undefined, undefined];
-  } catch (e) {
-    if (e instanceof Error) {
-      return [e, undefined];
-    }
-    return [new Error(fallbackError), undefined];
-  }
-}
-
-async function onClearAssets(): FlatPromise {
-  const [error] = await clearFolderContents(getAssetsDir(), "Couldn't remove assets");
-  if (error) {
-    return [error, undefined];
-  }
-
-  try {
-    await ensureUploadFoldersExist();
-    return [undefined, undefined];
-  } catch (e) {
-    if (e instanceof Error) {
-      return [e, undefined];
-    }
-    return [new Error("Couldn't recreate asset folders"), undefined];
-  }
-}
-
-async function clearSavedMarkovData(): FlatPromise {
-  const [messagesError] = await clearFolderContents(getMessagesPath(), "Couldn't remove saved messages");
-  if (messagesError) {
-    return [messagesError, undefined];
-  }
-
-  return clearFolderContents(getMarkovPath(), "Couldn't remove Markov chains");
-}
-
 export function HomeView({ onNavigate }: Props) {
   const { exit } = useApp();
   const [message, setMessage] = useState("Select an action to continue.");
   const [statusRefreshVersion, setStatusRefreshVersion] = useState(0);
+  const [tomatoExists, setTomatoExists] = useState(false);
+
+  useEffect(() => {
+    void tomatoGifExists().then(setTomatoExists);
+  }, [statusRefreshVersion]);
 
   const actions: Action[] = [
     {
       name: "Fetch GIFs",
+    },
+    {
+      name: "Create tomato GIF",
     },
     {
       name: "Clean transformed images",
@@ -91,9 +57,20 @@ export function HomeView({ onNavigate }: Props) {
         case "Fetch GIFs":
           onNavigate("fetch");
           break;
+        case "Create tomato GIF":
+          setMessage("Creating tomato GIF...");
+          const [tomatoError] = await createTomatoGif();
+          if (tomatoError) {
+            setMessage(`Something went wrong trying to create the tomato GIF ${tomatoError.message}`);
+          } else {
+            setTomatoExists(true);
+            setStatusRefreshVersion((version) => version + 1);
+            setMessage("Created tomato GIF");
+          }
+          break;
         case "Clean transformed images":
           setMessage("Deleting transformed images...");
-          const [error] = await clearFolderContents(getTransformedLocation(), "Couldn't remove transformed images");
+          const [error] = await cleanTransformedImages();
           if (error) {
             setMessage(`Something went wrong trying to delete files ${error.message}`);
           } else {
@@ -103,10 +80,11 @@ export function HomeView({ onNavigate }: Props) {
           break;
         case "Clean assets":
           setMessage("Deleting assets...");
-          const [assetsError] = await onClearAssets();
+          const [assetsError] = await cleanAssets();
           if (assetsError) {
             setMessage(`Something went wrong trying to delete files ${assetsError.message}`);
           } else {
+            setTomatoExists(false);
             setStatusRefreshVersion((version) => version + 1);
             setMessage("Cleared assets");
           }
@@ -142,8 +120,11 @@ export function HomeView({ onNavigate }: Props) {
       <Text bold>Actions</Text>
 
       {actions.map((action, index) => (
-        <Text key={action.name} color={selectedAction === index ? "green" : undefined}>
-          {selectedAction === index ? ">" : " "} {action.name}
+        <Text
+          key={action.name}
+          color={action.name === "Create tomato GIF" && !tomatoExists ? "yellow" : (selectedAction === index ? "green" : undefined)}
+        >
+          {selectedAction === index ? ">" : " "} {action.name}{action.name === "Create tomato GIF" && !tomatoExists ? " (missing)" : ""}
         </Text>
       ))}
 

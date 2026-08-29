@@ -1,6 +1,6 @@
 import path from "path";
 import { commandBuilder, optimizeCommand } from "./builder";
-import { getAssetsDir, getTransformedLocation } from "@/lib/files/useLocation";
+import { getTomatoPath, getTransformedLocation } from "@/lib/files/useLocation";
 import { execWithTimeout } from "@/util/execWithTimeout";
 
 /**
@@ -14,7 +14,7 @@ export async function ffmpegCombineTomato(
   inputImagePath: string,
   amount: number = 1,
 ): Promise<[unopt: string, optimized: string]> {
-  const tomatoPath = path.join(getAssetsDir(), "tomato.gif");
+  const tomatoPath = getTomatoPath();
 
   const fileName = inputImagePath.split("/").pop()?.split(".")[0];
   if (!fileName) {
