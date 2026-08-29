@@ -2,24 +2,21 @@ import { Box, Text } from "ink";
 import { useEffect, useState } from "react";
 import fs from "fs/promises";
 import {
+  getAssetsDir,
   getEffectsDir,
-  getRandomDir,
-  getTomatoDir,
   getTransformedLocation,
 } from "@/lib/files/useLocation";
 
 interface AssetCounts {
   effects: number;
-  randomizers: number;
-  tomatoes: number;
   transformed: number;
+  assets: number;
 }
 
 const emptyCounts: AssetCounts = {
   effects: 0,
-  randomizers: 0,
-  tomatoes: 0,
   transformed: 0,
+  assets: 0,
 };
 
 async function countItems(directory: string): Promise<number> {
@@ -32,40 +29,37 @@ async function countItems(directory: string): Promise<number> {
 }
 
 interface Props {
-  issueMessage: (message: string) => void;
+  refreshVersion: number;
 }
 
-export function Status({ issueMessage: issueMessage }: Props) {
+export function Status({ refreshVersion }: Props) {
   const [counts, setCounts] = useState<AssetCounts>(emptyCounts);
 
   useEffect(() => {
     let cancelled = false;
 
     async function loadCounts() {
-      const [effects, randomizers, tomatoes, transformed] = await Promise.all([
+      const [effects, transformed, assets] = await Promise.all([
         countItems(getEffectsDir()),
-        countItems(getRandomDir()),
-        countItems(getTomatoDir()),
         countItems(getTransformedLocation()),
+        countItems(getAssetsDir()),
       ]);
 
       if (cancelled) return;
-      setCounts({ effects, randomizers, tomatoes, transformed });
-      issueMessage("Select an action to continue.");
+      setCounts({ effects, transformed, assets });
     }
 
     void loadCounts();
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [refreshVersion]);
 
   return (
     <Box flexDirection="column">
       <Text bold>Asset status</Text>
-      <Text> Randomizer items: {counts.randomizers}</Text>
+      <Text> Asset items: {counts.assets}</Text>
       <Text> Effect items: {counts.effects}</Text>
-      <Text> Tomato items: {counts.tomatoes}</Text>
       <Text> Transformed items:{counts.transformed}</Text>
     </Box>
   );

@@ -59,8 +59,9 @@ export function FetchView({ onBack }: Props) {
     }
   });
 
-  if (isRunning) {
-    return <FetchRunning selectedTag={GOOD_TAGS[selectedIndex]} progress={progress} total={totalStamps} />;
+  const selectedTag = GOOD_TAGS[selectedIndex];
+  if (isRunning && selectedTag) {
+    return <FetchRunning selectedTag={selectedTag} progress={progress} total={totalStamps} />;
   }
 
   return <FetchOptions selectedIndex={selectedIndex} message={message} />;
