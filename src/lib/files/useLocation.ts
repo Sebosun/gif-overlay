@@ -1,6 +1,6 @@
 import path from "path";
 import { homedir } from "os";
-import type { GOOD_TAGS, TagNames } from "scripts/fetchGifs";
+import type { GOOD_TAGS } from "scripts/fetchGifs";
 
 const home = homedir();
 
@@ -15,6 +15,10 @@ export function getStorageLocation(): string {
   return path.join(home, ".local", "share", FOLDER_NAME);
 }
 
+export function getAssetsDir(): string {
+  return path.join(getStorageLocation(), "assets");
+}
+
 // transformed images loc
 export function getTransformedLocation(): string {
   return path.join(getStorageLocation(), "transformed");
@@ -26,7 +30,7 @@ export function getRootDir(): string {
 
 export function getRandomDir(): string {
   const RANDOM_DIR = "assets/randomizer";
-  const dir = path.join(getStorageLocation(), RANDOM_DIR);
+  const dir = path.join(getAssetsDir(), RANDOM_DIR);
   return dir;
 }
 
@@ -42,7 +46,7 @@ export function getTomatoDir(): string {
   return dir;
 }
 
-export function getAssetDir(asset: typeof GOOD_TAGS[number]): string {
-  const dir = path.join(getStorageLocation(), `$assets/${asset.tagAPIName}`);
+export function getAssetTagDir(asset: typeof GOOD_TAGS[number]): string {
+  const dir = path.join(getStorageLocation(), `assets/${asset.folderName}`);
   return dir;
 }

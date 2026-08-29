@@ -1,14 +1,20 @@
 import { existsSync } from "fs";
 import { mkdir } from "node:fs/promises";
-import { getStorageLocation, getTransformedLocation } from "./useLocation"
+import {
+  getAssetsDir,
+  getAssetTagDir,
+  getStorageLocation,
+  getTransformedLocation,
+} from "./useLocation";
+import { GOOD_TAGS } from "scripts/fetchGifs";
 
 async function ensureUserFolderExists(location: string): Promise<void> {
-  if (existsSync(location)) return
+  if (existsSync(location)) return;
   try {
-    await mkdir(location)
+    await mkdir(location);
   } catch (e) {
-    console.error(e)
-    throw new Error(`Couldn't make a directory ${location}`)
+    console.error(e);
+    throw new Error(`Couldn't make a directory ${location}`);
   }
 }
 
@@ -17,9 +23,16 @@ async function ensureUserFolderExists(location: string): Promise<void> {
  * These are used for storing user data, markov chains etc.
  */
 export async function ensureUploadFoldersExist(): Promise<void> {
-  const imageUploadLocation = getStorageLocation()
-  const transformedLoc = getTransformedLocation()
-  await ensureUserFolderExists(imageUploadLocation)
-  await ensureUserFolderExists(transformedLoc)
-}
+  const storageLocation = getStorageLocation();
+  const assetsDirLocation = getAssetsDir();
+  const transformedLoc = getTransformedLocation();
 
+  await ensureUserFolderExists(storageLocation);
+  await ensureUserFolderExists(transformedLoc);
+  await ensureUserFolderExists(assetsDirLocation);
+
+  for (const el of GOOD_TAGS) {
+    const dir = getAssetTagDir(el);
+    await ensureUserFolderExists(dir);
+  }
+}

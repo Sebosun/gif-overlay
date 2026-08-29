@@ -18,11 +18,16 @@ export interface Stamps {
 
 export interface DownloadImage {
   name: string;
-  isGif: boolean;
   saveName: string;
   imageUrl: string;
   width: number;
   height: number;
+}
+
+export interface FetchProgress {
+  downloaded: number;
+  errors: number;
+  alreadyExists: number;
 }
 
 export interface RunnerOpts {
@@ -30,6 +35,7 @@ export interface RunnerOpts {
   start: number;
   end: number;
   tag: string;
-  onProgress?: (amountDownloaded: number) => void
-  onEnd?: () => void
+  onProgress?: (progress: FetchProgress) => void;
+  onEnd?: () => void;
+  shouldStop?: () => boolean;
 }

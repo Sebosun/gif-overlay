@@ -1,61 +1,56 @@
-import { describe, expect, test } from 'vitest'
-import fs from "fs/promises"
-import { getEffectsDir, getRandomDir, getRootDir, getStorageLocation, getTomatoDir, getTransformedLocation } from '../src/lib/files/useLocation'
+import { beforeAll, describe, expect, test } from "vitest";
+import fs from "fs/promises";
+import { homedir } from "os";
+import path from "path";
+import { ensureUploadFoldersExist } from "../src/lib/files/ensureFoldersExist";
+import {
+  getAssetTagDir,
+  getEffectsDir,
+  getRandomDir,
+  getRootDir,
+  getStorageLocation,
+  getTomatoDir,
+  getTransformedLocation,
+} from "../src/lib/files/useLocation";
 
-// More of a sanity check than anything
-// Since paths are relative and systme dependent it'd be hard to otherwise test them
-// Tests would have to reimplement the functions that already exist
+describe("storage locations", () => {
+  beforeAll(async () => {
+    await ensureUploadFoldersExist();
+  });
 
-const throwableDoesntThrow = async (func: () => Promise<unknown> | unknown) => {
-  try {
-    await func()
-    return true
-  } catch {
-    return false
-  }
-}
+  test("returns the user storage directory", async () => {
+    const location = getStorageLocation();
 
-describe("Storage checks", () => {
-  test('If storage exists', async () => {
-    const storageLoc = getStorageLocation()
-    const exists = await throwableDoesntThrow(async () => await fs.stat(storageLoc))
+    expect(location).toBe(path.join(homedir(), ".local", "share", "gif-overlay"));
+    await expect(fs.stat(location)).resolves.toBeDefined();
+  });
 
-    expect(exists).toBe(true)
-  })
+  test("returns the transformed directory", async () => {
+    const location = getTransformedLocation();
 
-  test('If root dir exists', async () => {
-    const storageLoc = getRootDir()
-    const exists = await throwableDoesntThrow(async () => await fs.stat(storageLoc))
+    expect(location).toBe(path.join(getStorageLocation(), "transformed"));
+    await expect(fs.stat(location)).resolves.toBeDefined();
+  });
 
-    expect(exists).toBe(true)
-  })
+  test("returns the project root directory", async () => {
+    await expect(fs.stat(getRootDir())).resolves.toBeDefined();
+  });
 
+  test("returns the randomizer asset directory", () => {
+    expect(getRandomDir()).toBe(path.join(getStorageLocation(), "assets", "randomizer"));
+  });
 
-  test('If transformed dir exists', async () => {
-    const storageLoc = getTransformedLocation()
-    const exists = await throwableDoesntThrow(async () => await fs.stat(storageLoc))
+  test("returns the effects asset directory", () => {
+    expect(getEffectsDir()).toBe(path.join(getStorageLocation(), "assets", "effects"));
+  });
 
-    expect(exists).toBe(true)
-  })
+  test("returns the tomato asset directory", () => {
+    expect(getTomatoDir()).toBe(path.join(getStorageLocation(), "assets", "tomato"));
+  });
 
-  test('If random dir exists', async () => {
-    const storageLoc = getRandomDir()
-    const exists = await throwableDoesntThrow(async () => await fs.stat(storageLoc))
-    expect(exists).toBe(true)
-  })
-
-  test('If effects dir exists', async () => {
-    const storageLoc = getEffectsDir()
-    const exists = await throwableDoesntThrow(async () => await fs.stat(storageLoc))
-
-    expect(exists).toBe(true)
-  })
-
-  test('If tomato dir exists', async () => {
-    const storageLoc = getTomatoDir()
-    const exists = await throwableDoesntThrow(async () => await fs.stat(storageLoc))
-
-    expect(exists).toBe(true)
-  })
-
-})
+  test("returns a tag-specific asset directory", () => {
+    expect(getAssetTagDir({ name: "Anime", tagAPIName: "anime", folderName: "anime" })).toBe(
+      path.join(getStorageLocation(), "assets", "anime"),
+    );
+  });
+});
