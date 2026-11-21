@@ -6,7 +6,6 @@ export const config = {
   // Timeouts & Intervals
   typingIndicatorIntervalMs: ONE_SEC * 10,
   commandTimeoutMs: ONE_MIN * 5,
-  commandCheckIntervalMs: ONE_MIN,
   watchTimeoutMs: ONE_MIN * 5,
   markovUpdateIntervalMs: ONE_MIN * 60,
 
@@ -40,7 +39,6 @@ export const config = {
   ffmpegOptimizeScaleWidth: 300,
   ffmpegOptimizeFps: 10,
   ffmpegOptimizeLoopCount: 0,
-  ffmpegBgLoopCount: 1,
 
   // FFmpeg Random Positioning
   ffmpegCenterRandomXMin: -200,

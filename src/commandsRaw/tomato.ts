@@ -43,14 +43,13 @@ export async function tomato(message: OmitPartialGroupDMChannel<Message<boolean>
 
     await message.channel.sendTyping()
 
-    const [unopt, opt] = await ffmpegCombineTomato(imagePath, amount)
+    const result = await ffmpegCombineTomato(imagePath, amount)
 
     await message.channel.send({
-      files: [{ attachment: opt, name: "tomato.gif" }],
+      files: [{ attachment: result, name: "tomato.gif" }],
     });
 
-    cleanupFiles(unopt)
-    cleanupFiles(opt)
+    cleanupFiles(result)
     cleanupFiles(imagePath)
   } catch (e) {
     if (e instanceof Error) {

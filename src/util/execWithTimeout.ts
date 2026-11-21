@@ -1,31 +1,23 @@
 import cp from "child_process"
 import { config } from "@/config"
 
-export const execWithTimeout = (command: string): Promise<void> => {
+/**
+ * Runs an executable with arguments (no shell) and rejects if it fails or exceeds
+ * `config.commandTimeoutMs`.
+ */
+export const execWithTimeout = (file: string, args: string[]): Promise<void> => {
   return new Promise((resolve, reject) => {
-    // eslint-disable-next-line prefer-const
-    let interval: NodeJS.Timeout;
-    const startTime = new Date();
-
-    const proc = cp.exec(command, (error) => {
+    cp.execFile(file, args, { timeout: config.commandTimeoutMs }, (error, _stdout, stderr) => {
       if (error) {
-        reject(error);
-      }
-
-      resolve();
-      clearInterval(interval)
-    });
-
-    interval = setInterval(() => {
-      const curTime = new Date();
-      // Likely shouldn't run for more than minutes, even on raspberry pi
-      if (Number(curTime) - Number(startTime) > config.commandTimeoutMs) {
-        clearInterval(interval);
-        if (!proc.exitCode) {
-          proc.kill();
+        if (error.killed) {
+          reject(new Error("Command ran for too long"))
+          return
         }
-        reject(new Error("Command ran for too long"));
+        reject(new Error(`${file} failed: ${stderr || error.message}`))
+        return
       }
-    }, config.commandCheckIntervalMs);
-  });
-};
+
+      resolve()
+    })
+  })
+}

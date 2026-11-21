@@ -1,89 +1,80 @@
 import { randomNumberInterval } from "@/lib/randomNumberInterval"
 import { config } from "@/config"
 
-interface CommandBuilder {
-  background: string, overlay: string, resultPath: string, amount: number
+interface TomatoArgsOptions {
+  background: string
+  overlay: string
+  resultPath: string
+  amount: number
+  /** Width of the source background, used to keep random offsets proportional after downscaling. */
+  backgroundWidth?: number
 }
 
-export function getCentering() {
-  let center = ``
+/**
+ * Builds an overlay position expression for one tomato.
+ *
+ * Random offsets are configured in source-image pixels, so they are scaled by
+ * `scaleFactor` to match the downscaled frame the overlay is applied to.
+ */
+export function getCentering(scaleFactor = 1): string {
   const randomX = randomNumberInterval(config.ffmpegCenterRandomXMin, config.ffmpegCenterRandomXMax)
   const randomY = randomNumberInterval(config.ffmpegCenterRandomYMin, config.ffmpegCenterRandomYMax)
-  // const center = `x=(W-w)-${randomX}/2:y=(H-h)-${randomY}/2`
 
-  if (randomX >= 0) {
-    center += `x=((W-w)-${Math.abs(randomX)})/2`
-  } else {
-    center += `x=((W-w)+${Math.abs(randomX)})/2`
-  }
+  const dx = Math.round((-randomX * scaleFactor) / 2)
+  const dy = Math.round((-randomY * scaleFactor) / 2)
 
-  center += ":"
-
-  if (randomY >= 0) {
-    center += `y=(H-h)-${Math.abs(randomY)}/2`
-  } else {
-    center += `y=(H-h)+${Math.abs(randomY)}/2`
-  }
-
-  return center
+  return `x=(W-w)/2+(${dx}):y=(H-h)+(${dy})`
 }
 
-export function commandBuilder(options: CommandBuilder) {
-  const { background: bg, overlay: ov, resultPath, amount } = options
+/**
+ * Builds ffmpeg arguments that overlay `amount` tomatoes on a background in a single pass.
+ *
+ * The background is downscaled to the output width and the frame rate is reduced
+ * before any compositing, the tomato GIF is decoded and scaled once and then split,
+ * and a generated palette is used for the final GIF encode.
+ */
+export function tomatoArgs(options: TomatoArgsOptions): string[] {
+  const { background, overlay, resultPath, amount, backgroundWidth } = options
 
-  const collector = ['ffmpeg']
+  const width = config.ffmpegOptimizeScaleWidth
+  const fps = config.ffmpegOptimizeFps
+  const scaleFactor = backgroundWidth ? width / backgroundWidth : 1
+  const isAnimated = background.endsWith(".gif")
 
-  const setupRef = "[0:v]split=2[bg][ref]"
-  const inputs = [`-i ${bg}`]
-  const scale = [] as string[]
-  const overlay = [] as string[]
-  // let overlay = `[0:v][scaled]overlay=${center}:shortest=1`
-  // const filter = `-filter_complex "${scale};${overlay}[firstpass];[firstpass][2:v]overlay=${center2}:shortest=1"`
-  // let scale = "[1:v]scale=w=oh*dar:h=rh[scaled]"
+  // Still images are decoded and scaled once, then repeated with the loop filter
+  // instead of re-decoding the full-size source for every frame.
+  const bgChain = isAnimated
+    ? `[0:v]fps=${fps},scale=${width}:-1:flags=lanczos`
+    : `[0:v]scale=${width}:-1:flags=lanczos,loop=loop=-1:size=1,fps=${fps}`
 
-  for (let i = 0; i < amount; i++) {
-    const scaleName = `scaled${i + 1}`
-    const pass = `pass${i + 1}`
-    const pvPass = `pass${i}`
-    const center = getCentering()
-
-    inputs.push(`-i ${ov}`)
-
-    // Rant but apparently when you provide [0][ref] to scale, it takes the second
-    // input as reference, not a thing you apply on
-    // Imagine spending like 2 hours finding out why
+  const filters = [
+    `${bgChain},split=2[bg][ref]`,
     // dar = display ratio (selected gif); oh = output height; rh = reference height
-    scale.push(`[${i + 1}:v][ref]scale=w=oh*dar:h=rh[${scaleName}]`)
+    `[1:v]fps=${fps}[tomato]`,
+    `[tomato][ref]scale=w=oh*dar:h=rh[scaled]`,
+  ]
 
-    // last arg of overlay cannot assign a name
-    if (amount === 1) {
-      overlay.push(`[bg][${scaleName}]overlay=${center}:shortest=1`)
-    } else if (i === 0) {
-      overlay.push(`[bg][${scaleName}]overlay=${center}:shortest=1[${pass}]`)
-    } else if (i + 1 === amount) {
-      overlay.push(`[${pvPass}][${scaleName}]overlay=${center}:shortest=1`)
-    } else {
-      overlay.push(`[${pvPass}][${scaleName}]overlay=${center}:shortest=1[${pass}]`)
-    }
+  const tomatoLabels = Array.from({ length: amount }, (_, i) => `[t${i}]`)
+  filters.push(`[scaled]split=${amount}${tomatoLabels.join("")}`)
+
+  let previous = "[bg]"
+  for (const [i, label] of tomatoLabels.entries()) {
+    const next = `[p${i}]`
+    filters.push(`${previous}${label}overlay=${getCentering(scaleFactor)}:shortest=1${next}`)
+    previous = next
   }
 
-  const filterJoined = `-filter_complex "${setupRef};${scale.join(";")};${overlay.join(";")}"`
+  filters.push(`${previous}split[pa][pb]`)
+  filters.push(`[pa]palettegen[pal]`)
+  filters.push(`[pb][pal]paletteuse=dither=bayer`)
 
-  const confirmReplace = "-y"
-
-  if (!bg.endsWith('.gif')) {
-    const loop = `-loop ${config.ffmpegBgLoopCount}`
-    collector.push(loop)
-  }
-
-  collector.push(inputs.join(" "))
-  collector.push(filterJoined)
-  collector.push(confirmReplace)
-  collector.push(resultPath)
-
-  return collector.join(" ")
-}
-
-export const optimizeCommand = (input: string, output: string) => {
-  return `ffmpeg -y -i ${input} -vf "scale=${config.ffmpegOptimizeScaleWidth}:-1:flags=lanczos,fps=${config.ffmpegOptimizeFps}" -loop ${config.ffmpegOptimizeLoopCount} ${output}`
+  return [
+    "-v", "error",
+    "-y",
+    "-i", background,
+    "-i", overlay,
+    "-filter_complex", filters.join(";"),
+    "-loop", String(config.ffmpegOptimizeLoopCount),
+    resultPath,
+  ]
 }
